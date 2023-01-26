@@ -1,8 +1,8 @@
 from pyspark import SparkContext
 import os
 
-os.environ['PYSPARK_PYTHON'] = '/Users/rutvikpatel/.pyenv/versions/3.6.15'
-os.environ['PYSPARK_DRIVER_'] = '/Users/rutvikpatel/.pyenv/versions/3.6.15'
+os.environ['PYSPARK_PYTHON'] = '/opt/homebrew/opt/python@3.10/bin/python3.10'
+os.environ['PYSPARK_DRIVER_'] = '/opt/homebrew/opt/python@3.10/bin/python3.10'
 
 sc = SparkContext('local[*]', 'wordCount')
 
