@@ -14,13 +14,17 @@ To run the programs on Vocareum terminal the following steps are needed:
 opt/spark/spark-3.1.2-bin-hadoop3.2/bin/spark-submit --executor-memory 4G --driver-memory 4G script.py
 ```
 
-Demo run example:
+Vocareum demo run example:
 
-![Homework 0 Demo Run](../assets/demo_run.png)
+![Homework 0 Demo Run](../assets/hw0-demo-run-vocareum.png)
 
 To run the files locally, perform the following steps:
 1. Install JDK 1.8.
 2. Install Spark Hadoop for mac and set ```SPARK_HOME```, ```HADOOP_HOME``` environment variables to the spark root directory and the hadoop root directory respectively.
 3. Install python 3.6 ([ref. here](https://github.com/pyenv/pyenv/issues/1768#issuecomment-1403097990)) though newer versions may work.
 4. Alternatively, refer [this](https://www.youtube.com/watch?v=5gFGVDqEYeY) video.
-5. Run the program using ```python word_count.py```. 
+5. Run the program using ```python word_count.py```.
+
+Local demo run example:
+
+![Homework 0 Demo Run](../assets/hw0-demo-run-local.png)
