@@ -28,3 +28,21 @@ To run the files locally, perform the following steps:
 Local demo run example:
 
 ![Homework 0 Demo Run](../assets/hw0-demo-run-local.png)
+
+Troubleshoot:
+- Path not configured properly for spark or hadoop - add the following in ```~/.zshrc``` or ```~/.zprofile``` depending on whichever is used:
+```
+# Set env vars for spark and hadoop
+export SPARK_HOME=/Library/spark-3.3.1-bin-hadoop3
+export PYTHONPATH=/Library/spark-3.3.1-bin-hadoop3/python
+```
+- JDK is not available - add the following in ```~/.zshrc``` or ```~/.zprofile``` depending on whichever is used:
+```
+# Set env var for Java
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/liberica-jdk-8.jdk
+```
+or use the path of any other JDK distribution if multiple of them are installed.
+- PORT is unassigned (Can't assign requested address: Service 'sparkDriver' failed after 16 retries) - Manually set ```SPARK_LOCAL_IP``` in ```/Library/spark-3.3.1-bin-hadoop3/bin/load-spark-env.sh``` using:
+```
+export SPARK_LOCAL_IP="127.0.0.1"
+```
