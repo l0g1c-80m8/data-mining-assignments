@@ -16,6 +16,10 @@ write a program to automatically answer the following questions: <br/>
 4. The top 10 users who wrote the largest numbers of reviews and the number of reviews they wrote (0.5 point) <br/>
 5. The number of distinct businesses that have been reviewed (0.5 point) <br/>
 
+Run the program using the following commands:
+- Locally: ```python python/task1.py ../dataset/test_review.json ../out/task1_out.json --local```
+- Vocareum: ```TBD```
+
 ## Dataset
 
 The dataset can be found on these links:
