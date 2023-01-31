@@ -1,7 +1,7 @@
 ## Assignments for DSCI 553 : Foundations and Applications of Data Mining ##
 Repo to contain the assignments for [DSCI 553](https://web-app.usc.edu/soc/syllabus/20223/32440.pdf): Foundations and Applications of Data Mining Course
 
-#### Instructor: Professor Wei-Min Shen (Spring 2023)
+#### Instructor: Professor [Wei-Min Shen](https://viterbi-web.usc.edu/~wmshen/) (Spring 2023)
 
 Follow these instructions to run the script [locally](homework-assignment-0/README.md#to-run-the-files-locally-perform-the-following-steps) and on [Vocareum](homework-assignment-0/README.md#to-run-the-programs-on-vocareum-terminal-the-following-steps-are-needed).
 
