@@ -13,6 +13,7 @@ environment to be used to run the project submission on.
 ```
 opt/spark/spark-3.1.2-bin-hadoop3.2/bin/spark-submit --executor-memory 4G --driver-memory 4G script.py
 ```
+6. Alternatively, execute ```./run.sh```.
 
 Vocareum demo run example:
 
