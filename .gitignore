@@ -1,2 +1,5 @@
 # IDE files
 .idea/
+
+# ignore datasets
+homework-assignment-1/**.json
