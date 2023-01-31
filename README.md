@@ -1,4 +1,4 @@
-## Assignments for DSCI 553 : Fundations and Applications for Data Mining ##
+## Assignments for DSCI 553 : Fundations and Applications of Data Mining ##
 Repo to contain the assignments for DSCI 553: Foundations and Applications of Data Mining Course
 
 #### Instructor: Professor Wei-Min Shen (Spring 2023)
