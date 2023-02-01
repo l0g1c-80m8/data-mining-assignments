@@ -61,7 +61,17 @@ The dataset can be found on these links:
 This file is used in [task 1](#task-1-data-exploration), [task 2](#task-2-partition) and in [task 3](#task-3-exploration-on-multiple-datasets). <br/>
 This file contains rows of json records as shown below. 
 ```
-{"review_id":"Q1sbwvVQXV2734tPgoKj4Q","user_id":"hG7b0MtEbXx5QzbzE6C_VA","business_id":"ujmEBvifdJM6h6RLv4wQIg","stars":1.0,"useful":6,"funny":1,"cool":0,"text":"Total bill for this horrible service? Over $8Gs. These crooks actually had the nerve to charge us $69 for 3 pills. I checked online the pills can be had for 19 cents EACH! Avoid Hospital ERs at all costs.","date":"2013-05-07 04:34:36"}
+{
+  "review_id": "Q1sbwvVQXV2734tPgoKj4Q",
+  "user_id": "hG7b0MtEbXx5QzbzE6C_VA",
+  "business_id": "ujmEBvifdJM6h6RLv4wQIg",
+  "stars": 1,
+  "useful": 6,
+  "funny": 1,
+  "cool": 0,
+  "text": "Total bill for this horrible service? Over $8Gs. These crooks actually had the nerve to charge us $69 for 3 pills. I checked online the pills can be had for 19 cents EACH! Avoid Hospital ERs at all costs.",
+  "date": "2013-05-07 04:34:36"
+}
 ```
 
 ### File 2: ```business.json```
