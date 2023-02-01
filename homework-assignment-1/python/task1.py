@@ -70,3 +70,6 @@ if len(sys.argv) > 3 and sys.argv[3] == '--local':
 # https://stackoverflow.com/questions/12309269/how-do-i-write-json-data-to-a-file
 with open(result_path, 'w') as file_handle:
     json.dump(results, file_handle)
+
+# exit without errors
+exit(0)

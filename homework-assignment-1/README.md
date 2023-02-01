@@ -1,6 +1,6 @@
 # Homework 1: Analytics on Yelp Data
 
-This homework involves data exploration and analytics on Yelp data set which is available in JSON format.
+This homework involves data exploration and analytics on Yelp data set which is available in JSON format. For the exact homework specs refer to the [description file](Homework%201%20Description.pdf).
 
 ## Tasks
 
