@@ -18,7 +18,7 @@ write a program to automatically answer the following questions: <br/>
 
 Run the program using the following commands (or refer [here](../homework-assignment-0/README.md) for manual execution):
 - Locally: ```python python/task1.py dataset/test_review.json out/task1_out.json --local```
-- Vocareum: ```./run.sh task1.py ./resource/asnlib/publicdata/review.json ./task1-out.json```
+- Vocareum: ```./run.sh task1.py ../resource/asnlib/publicdata/review.json ./task1-out.json```
 
 ### Task 2: Partition
 
@@ -32,7 +32,7 @@ operations.
 
 Run the program using the following commands (or refer [here](../homework-assignment-0/README.md) for manual execution):
 - Locally: ```python python/task2.py dataset/test_review.json out/task2_out.json 2 --local```
-- Vocareum: ```./run.sh task2.py ./resource/asnlib/publicdata/review.json ./task2-out.json 2```
+- Vocareum: ```./run.sh task2.py ../resource/asnlib/publicdata/review.json ./task2-out.json 2```
 
 ## Dataset
 
