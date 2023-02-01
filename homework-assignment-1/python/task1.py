@@ -63,7 +63,7 @@ results['top10_business'] = datasetRDD \
     .takeOrdered(10, key=lambda business_count: [-business_count[1], business_count])
 
 # print the results on console for local execution
-if len(sys.argv) > 3 and sys.argv[3] == '--local':
+if sys.argv[len(sys.argv) - 1] == '--local':
     print('Computed results:', results)
 
 # write results to the file at result_path
