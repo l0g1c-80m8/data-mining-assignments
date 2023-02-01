@@ -69,5 +69,47 @@ This file contains rows of json records as shown below.
 This file is used exclusively for [task 3](#task-3-exploration-on-multiple-datasets). <br/>
 This file contains rows of json records as shown below. 
 ```
-{"review_id":"Q1sbwvVQXV2734tPgoKj4Q","user_id":"hG7b0MtEbXx5QzbzE6C_VA","business_id":"ujmEBvifdJM6h6RLv4wQIg","stars":1.0,"useful":6,"funny":1,"cool":0,"text":"Total bill for this horrible service? Over $8Gs. These crooks actually had the nerve to charge us $69 for 3 pills. I checked online the pills can be had for 19 cents EACH! Avoid Hospital ERs at all costs.","date":"2013-05-07 04:34:36"}
+{
+  "business_id": "gnKjwL_1w79qoiV3IC_xQQ",
+  "name": "Musashi Japanese Restaurant",
+  "address": "10110 Johnston Rd, Ste 15",
+  "city": "Charlotte",
+  "state": "NC",
+  "postal_code": "28210",
+  "latitude": 35.092564,
+  "longitude": -80.859132,
+  "stars": 4,
+  "review_count": 170,
+  "is_open": 1,
+  "attributes": {
+    "GoodForKids": "True",
+    "NoiseLevel": "u'average'",
+    "RestaurantsDelivery": "False",
+    "GoodForMeal": "{'dessert': False, 'latenight': False, 'lunch': True, 'dinner': True, 'brunch': False, 'breakfast': False}",
+    "Alcohol": "u'beer_and_wine'",
+    "Caters": "False",
+    "WiFi": "u'no'",
+    "RestaurantsTakeOut": "True",
+    "BusinessAcceptsCreditCards": "True",
+    "Ambience": "{'romantic': False, 'intimate': False, 'touristy': False, 'hipster': False, 'divey': False, 'classy': False, 'trendy': False, 'upscale': False, 'casual': True}",
+    "BusinessParking": "{'garage': False, 'street': False, 'validated': False, 'lot': True, 'valet': False}",
+    "RestaurantsTableService": "True",
+    "RestaurantsGoodForGroups": "True",
+    "OutdoorSeating": "False",
+    "HasTV": "True",
+    "BikeParking": "True",
+    "RestaurantsReservations": "True",
+    "RestaurantsPriceRange2": "2",
+    "RestaurantsAttire": "'casual'"
+  },
+  "categories": "Sushi Bars, Restaurants, Japanese",
+  "hours": {
+    "Monday": "17:30-21:30",
+    "Wednesday": "17:30-21:30",
+    "Thursday": "17:30-21:30",
+    "Friday": "17:30-22:0",
+    "Saturday": "17:30-22:0",
+    "Sunday": "17:30-21:0"
+  }
+}
 ```
