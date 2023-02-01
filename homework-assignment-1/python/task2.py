@@ -20,8 +20,8 @@ os.environ['PYSPARK_PYTHON'] = sys.executable
 os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
 
 if len(sys.argv) < 4:
-    # expected arguments: script path, dataset path, output file path
-    print('ERR: Expected three arguments: script path, dataset path and output file path.')
+    # expected arguments: script path, dataset path, output file path, number of partitions
+    print('ERR: Expected three arguments: script path, dataset path, output file path and number of partitions.')
     exit(1)
 
 # read program arguments
