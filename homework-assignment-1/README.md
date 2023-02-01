@@ -6,7 +6,7 @@ This homework involves data exploration and analytics on Yelp data set which is 
 
 ### Task 1: Data Exploration
 
-- Dataset used: [```test_review.json```](#file-1--testreviewjson) <br/>
+- Dataset used: [```review.json```](#file-1--reviewjson) <br/>
 
 The dataset contains the review information from users. The task here is to process the file and
 write a program to automatically answer the following questions: <br/>
@@ -22,7 +22,7 @@ Run the program using the following commands (or refer [here](../homework-assign
 
 ### Task 2: Partition
 
-- Dataset used: [```test_review.json```](#file-1--testreviewjson) <br/>
+- Dataset used: [```review.json```](#file-1--reviewjson) <br/>
 
 In this task, a custom partition scheme is compared with the default partition scheme to show
 how partitioning of data across the RDD affects the performance of any map-reduce computation.
@@ -34,15 +34,39 @@ Run the program using the following commands (or refer [here](../homework-assign
 - Locally: ```python python/task2.py dataset/test_review.json out/task2_out.json 2 --local```
 - Vocareum: ```./run.sh task2.py ../resource/asnlib/publicdata/review.json ./task2-out.json 2```
 
+### Task 3: Exploration on Multiple Datasets
+
+- Dataset used: [```review.json```](#file-1--reviewjson), [```business.json```](#file-2--businessjson) <br/>
+
+In task 3, two datasets are explored together containing review information (```review.json```) 
+and business information (```business.json```). This task requires combining results from both 
+datasets to arrive at the final results.
+
+A program is developed to answer the following questions:
+1. What are the average stars for each city? (1 point)
+2. Compare the execution time of using two methods to print top 10 cities with highest average stars.
+
+Run the program using the following commands (or refer [here](../homework-assignment-0/README.md) for manual execution):
+- Locally: ```python python/task3.py dataset/test_review.json dataset/business.json out/task3-A_out.txt out/task3-B_out.json --local```
+- Vocareum: ```./run.sh task3.py ../resource/asnlib/publicdata/review.json ../resource/asnlib/publicdata/business.json ./task3-A_out.txt ./task3-B_out.json```
+
 ## Dataset
 
 The dataset can be found on these links:
 - [Full Dataset](https://www.yelp.com/dataset): This is the full dataset on which the assignment will be graded.
 - [Test Dataset](https://drive.google.com/drive/folders/1JlRztnGk5LLD8xYvj6Dp5RgG45YGUNuD?usp=sharing): This is a shorter version of the full dataset which is helpful during the development.
 
-### File 1: ```test_review.json```
+### File 1: ```review.json```
 
-This file is used in [task 1](#task-1--data-exploration) and in [task 3](#task-3--data-exploration). <br/>
+This file is used in [task 1](#task-1--data-exploration) and in [task 3](#task-3--exploration-on-multiple-datasets). <br/>
+This file contains rows of json records as shown below. 
+```
+{"review_id":"Q1sbwvVQXV2734tPgoKj4Q","user_id":"hG7b0MtEbXx5QzbzE6C_VA","business_id":"ujmEBvifdJM6h6RLv4wQIg","stars":1.0,"useful":6,"funny":1,"cool":0,"text":"Total bill for this horrible service? Over $8Gs. These crooks actually had the nerve to charge us $69 for 3 pills. I checked online the pills can be had for 19 cents EACH! Avoid Hospital ERs at all costs.","date":"2013-05-07 04:34:36"}
+```
+
+### File 2: ```business.json```
+
+This file is used exclusively for [task 3](#task-3--exploration-on-multiple-datasets). <br/>
 This file contains rows of json records as shown below. 
 ```
 {"review_id":"Q1sbwvVQXV2734tPgoKj4Q","user_id":"hG7b0MtEbXx5QzbzE6C_VA","business_id":"ujmEBvifdJM6h6RLv4wQIg","stars":1.0,"useful":6,"funny":1,"cool":0,"text":"Total bill for this horrible service? Over $8Gs. These crooks actually had the nerve to charge us $69 for 3 pills. I checked online the pills can be had for 19 cents EACH! Avoid Hospital ERs at all costs.","date":"2013-05-07 04:34:36"}
