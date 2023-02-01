@@ -6,7 +6,7 @@ This homework involves data exploration and analytics on Yelp data set which is 
 
 ### Task 1: Data Exploration
 
-- Dataset used: [```review.json```](#file-1--reviewjson) <br/>
+- Dataset used: [```review.json```](#file-1-reviewjson) <br/>
 
 The dataset contains the review information from users. The task here is to process the file and
 write a program to automatically answer the following questions: <br/>
@@ -22,7 +22,7 @@ Run the program using the following commands (or refer [here](../homework-assign
 
 ### Task 2: Partition
 
-- Dataset used: [```review.json```](#file-1--reviewjson) <br/>
+- Dataset used: [```review.json```](#file-1-reviewjson) <br/>
 
 In this task, a custom partition scheme is compared with the default partition scheme to show
 how partitioning of data across the RDD affects the performance of any map-reduce computation.
@@ -36,7 +36,7 @@ Run the program using the following commands (or refer [here](../homework-assign
 
 ### Task 3: Exploration on Multiple Datasets
 
-- Dataset used: [```review.json```](#file-1--reviewjson), [```business.json```](#file-2--businessjson) <br/>
+- Dataset used: [```review.json```](#file-1-reviewjson), [```business.json```](#file-2-businessjson) <br/>
 
 In task 3, two datasets are explored together containing review information (```review.json```) 
 and business information (```business.json```). This task requires combining results from both 
@@ -58,7 +58,7 @@ The dataset can be found on these links:
 
 ### File 1: ```review.json```
 
-This file is used in [task 1](#task-1--data-exploration) and in [task 3](#task-3--exploration-on-multiple-datasets). <br/>
+This file is used in [task 1](#task-1-data-exploration), [task 2](#task-2-partition) and in [task 3](#task-3-exploration-on-multiple-datasets). <br/>
 This file contains rows of json records as shown below. 
 ```
 {"review_id":"Q1sbwvVQXV2734tPgoKj4Q","user_id":"hG7b0MtEbXx5QzbzE6C_VA","business_id":"ujmEBvifdJM6h6RLv4wQIg","stars":1.0,"useful":6,"funny":1,"cool":0,"text":"Total bill for this horrible service? Over $8Gs. These crooks actually had the nerve to charge us $69 for 3 pills. I checked online the pills can be had for 19 cents EACH! Avoid Hospital ERs at all costs.","date":"2013-05-07 04:34:36"}
@@ -66,7 +66,7 @@ This file contains rows of json records as shown below.
 
 ### File 2: ```business.json```
 
-This file is used exclusively for [task 3](#task-3--exploration-on-multiple-datasets). <br/>
+This file is used exclusively for [task 3](#task-3-exploration-on-multiple-datasets). <br/>
 This file contains rows of json records as shown below. 
 ```
 {"review_id":"Q1sbwvVQXV2734tPgoKj4Q","user_id":"hG7b0MtEbXx5QzbzE6C_VA","business_id":"ujmEBvifdJM6h6RLv4wQIg","stars":1.0,"useful":6,"funny":1,"cool":0,"text":"Total bill for this horrible service? Over $8Gs. These crooks actually had the nerve to charge us $69 for 3 pills. I checked online the pills can be had for 19 cents EACH! Avoid Hospital ERs at all costs.","date":"2013-05-07 04:34:36"}
