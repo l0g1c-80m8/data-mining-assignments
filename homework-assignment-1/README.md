@@ -44,7 +44,7 @@ datasets to arrive at the final results.
 
 A program is developed to answer the following questions:
 1. What are the average stars for each city? (1 point)
-2. Compare the execution time of using two methods to print top 10 cities with highest average stars.
+2. Compare the execution time of using two methods to print top 10 cities with the highest average stars. (1 point)
 
 Run the program using the following commands (or refer [here](../homework-assignment-0/README.md) for manual execution):
 - Locally: ```python python/task3.py dataset/test_review.json dataset/business.json out/task3-A_out.txt out/task3-B_out.json --local```
