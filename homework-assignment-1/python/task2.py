@@ -49,7 +49,7 @@ defaultDatasetRDD = datasetRDD.map(lambda rawLine: json.loads(rawLine))
 ts1 = datetime.now()
 
 defaultDatasetRDD.map(lambda reviewObj: (reviewObj['business_id'], 1)) \
-    .partitionBy(n_partition) \
+    .partitionBy(numPartitions=n_partition) \
     .reduceByKey(add) \
     .takeOrdered(10, key=lambda business_count: [-business_count[1], business_count])
 
@@ -65,6 +65,8 @@ results['default'] = {
 
 '''
 Part 2. RDD construction using custom partition scheme
+
+Reference: https://www.talend.com/resources/intro-apache-spark-partitioning/
 '''
 # convert each text line into json objects and cache the RDD for processing
 customizedDatasetRDD = datasetRDD.map(lambda rawLine: json.loads(rawLine))
@@ -73,7 +75,7 @@ customizedDatasetRDD = datasetRDD.map(lambda rawLine: json.loads(rawLine))
 ts1 = datetime.now()
 
 customizedDatasetRDD.map(lambda reviewObj: (reviewObj['business_id'], 1)) \
-    .partitionBy(n_partition) \
+    .partitionBy(numPartitions=n_partition, partitionFunc=lambda business_id: ord(business_id[-1]) % n_partition) \
     .reduceByKey(add) \
     .takeOrdered(10, key=lambda business_count: [-business_count[1], business_count])
 # second clock measurement
