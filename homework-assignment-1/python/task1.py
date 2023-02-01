@@ -34,8 +34,8 @@ sc.setLogLevel('WARN')
 # read the data and construct a spark RDD object
 datasetRDD = sc.textFile(dataset_path)
 
-# convert each text line into json objects and cache the RDD for processing
-datasetRDD = datasetRDD.map(lambda rawLine: json.loads(rawLine)).cache()
+# convert each text line into json objects
+datasetRDD = datasetRDD.map(lambda rawLine: json.loads(rawLine))
 
 # [Query] A. The total number of reviews (0.5 point)
 results['n_review'] = datasetRDD.count()
