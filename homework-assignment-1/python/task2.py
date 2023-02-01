@@ -2,7 +2,10 @@
 Homework Assignment 1
 Task 2
 
-Using a custom partitioning of data to improve the performance of the map-reduce computation
+Using a custom partitioning of data to improve the performance of the map-reduce computation.
+
+Computation description:
+Task 1 Query F: The top 10 businesses that had the largest number of reviews and the number of reviews they had.
 """
 
 import json
@@ -37,13 +40,10 @@ sc.setLogLevel('WARN')
 datasetRDD = sc.textFile(dataset_path)
 
 '''
-RDD construction using default partition scheme
+Part 1. RDD construction using default partition scheme
 '''
 # convert each text line into json objects and cache the RDD for processing
 defaultDatasetRDD = datasetRDD.map(lambda rawLine: json.loads(rawLine))
-
-# Task 1 Query F. The top 10 businesses that had the largest number of reviews and the number of reviews they had
-# https://docs.python.org/3.6/library/datetime.html
 
 # first clock measurement
 ts1 = datetime.now()
@@ -52,6 +52,7 @@ defaultDatasetRDD.map(lambda reviewObj: (reviewObj['business_id'], 1)) \
     .partitionBy(n_partition) \
     .reduceByKey(add) \
     .takeOrdered(10, key=lambda business_count: [-business_count[1], business_count])
+
 # second clock measurement
 ts2 = datetime.now()
 
@@ -59,6 +60,29 @@ ts2 = datetime.now()
 results['default'] = {
     'n_partition': defaultDatasetRDD.getNumPartitions(),
     'n_items': defaultDatasetRDD.glom().map(lambda partition_list: len(partition_list)).collect(),
+    'exe_time': (ts2 - ts1) / timedelta(microseconds=1),  # https://docs.python.org/3.6/library/datetime.html
+}
+
+'''
+Part 2. RDD construction using custom partition scheme
+'''
+# convert each text line into json objects and cache the RDD for processing
+customizedDatasetRDD = datasetRDD.map(lambda rawLine: json.loads(rawLine))
+
+# first clock measurement
+ts1 = datetime.now()
+
+customizedDatasetRDD.map(lambda reviewObj: (reviewObj['business_id'], 1)) \
+    .partitionBy(n_partition) \
+    .reduceByKey(add) \
+    .takeOrdered(10, key=lambda business_count: [-business_count[1], business_count])
+# second clock measurement
+ts2 = datetime.now()
+
+# store results
+results['customized'] = {
+    'n_partition': customizedDatasetRDD.getNumPartitions(),
+    'n_items': customizedDatasetRDD.glom().map(lambda partition_list: len(partition_list)).collect(),
     'exe_time': (ts2 - ts1) / timedelta(microseconds=1),
 }
 
