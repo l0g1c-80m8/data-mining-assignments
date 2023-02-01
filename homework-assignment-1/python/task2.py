@@ -59,7 +59,7 @@ ts2 = datetime.now()
 # store results
 results['default'] = {
     'n_partition': defaultDatasetRDD.getNumPartitions(),
-    'n_items': defaultDatasetRDD.glom().map(lambda partition_list: len(partition_list)).collect(),
+    'n_items': defaultDatasetRDD.glom().map(len).collect(),
     'exe_time': (ts2 - ts1) / timedelta(microseconds=1),  # https://docs.python.org/3.6/library/datetime.html
 }
 
@@ -84,7 +84,7 @@ ts2 = datetime.now()
 # store results
 results['customized'] = {
     'n_partition': customizedDatasetRDD.getNumPartitions(),
-    'n_items': customizedDatasetRDD.glom().map(lambda partition_list: len(partition_list)).collect(),
+    'n_items': customizedDatasetRDD.glom().map(len).collect(),
     'exe_time': (ts2 - ts1) / timedelta(microseconds=1),
 }
 
