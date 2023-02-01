@@ -20,6 +20,20 @@ Run the program using the following commands (or refer [here](../homework-assign
 - Locally: ```python python/task1.py dataset/test_review.json out/task1_out.json --local```
 - Vocareum: ```./run.sh task1.py ./resource/asnlib/publicdata/review.json ./task1-out.json```
 
+### Task 2: Partition
+
+- Dataset used: [```test_review.json```](#file-1--testreviewjson) <br/>
+
+In this task, a custom partition scheme is compared with the default partition scheme to show
+how partitioning of data across the RDD affects the performance of any map-reduce computation.
+The trick to design an efficient partition scheme is to study the chain of operations that take
+place during the computation and minimizing the implicit shuffle operations between the chained
+operations.
+
+Run the program using the following commands (or refer [here](../homework-assignment-0/README.md) for manual execution):
+- Locally: ```python python/task2.py dataset/test_review.json out/task2_out.json 2 --local```
+- Vocareum: ```./run.sh task2.py ./resource/asnlib/publicdata/review.json ./task2-out.json 2```
+
 ## Dataset
 
 The dataset can be found on these links:
