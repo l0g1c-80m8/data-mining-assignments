@@ -17,8 +17,12 @@ write a program to automatically answer the following questions: <br/>
 5. The number of distinct businesses that have been reviewed (0.5 point) <br/>
 
 Run the program using the following commands (or refer [here](../homework-assignment-0/README.md) for manual execution):
-- Locally: ```python python/task1.py dataset/test_review.json out/task1_out.json --local```
-- Vocareum: ```./run.sh task1.py ../resource/asnlib/publicdata/review.json ./task1-out.json```
+- Python:
+  - Locally: ```python python/task1.py dataset/test_review.json out/task1_out.json --local```
+  - Vocareum: ```./run.sh task1.py ../resource/asnlib/publicdata/review.json ./task1-out.json```
+- Scala:
+  - Locally:
+  - Vocareum:
 
 ### Task 2: Partition
 
@@ -31,8 +35,12 @@ place during the computation and minimizing the implicit shuffle operations betw
 operations.
 
 Run the program using the following commands (or refer [here](../homework-assignment-0/README.md) for manual execution):
-- Locally: ```python python/task2.py dataset/test_review.json out/task2_out.json 4 --local```
-- Vocareum: ```./run.sh task2.py ../resource/asnlib/publicdata/review.json ./task2-out.json 21```
+- Python
+  - Locally: ```python python/task2.py dataset/test_review.json out/task2_out.json 4 --local```
+  - Vocareum: ```./run.sh task2.py ../resource/asnlib/publicdata/review.json ./task2-out.json 21```
+- Scala:
+  - Locally:
+  - Vocareum:
 
 ### Task 3: Exploration on Multiple Datasets
 
@@ -47,8 +55,12 @@ A program is developed to answer the following questions:
 2. Compare the execution time of using two methods to print top 10 cities with the highest average stars. (1 point)
 
 Run the program using the following commands (or refer [here](../homework-assignment-0/README.md) for manual execution):
-- Locally: ```python python/task3.py dataset/test_review.json dataset/business.json out/task3-A_out.txt out/task3-B_out.json --local```
-- Vocareum: ```./run.sh task3.py ../resource/asnlib/publicdata/review.json ../resource/asnlib/publicdata/business.json ./task3-A_out.txt ./task3-B_out.json```
+- Python
+  - Locally: ```python python/task3.py dataset/test_review.json dataset/business.json out/task3-A_out.txt out/task3-B_out.json --local```
+  - Vocareum: ```./run.sh task3.py ../resource/asnlib/publicdata/review.json ../resource/asnlib/publicdata/business.json ./task3-A_out.txt ./task3-B_out.json```
+- Scala:
+  - Locally:
+  - Vocareum:
 
 ## Dataset
 
