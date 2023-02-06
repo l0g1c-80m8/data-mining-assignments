@@ -2,9 +2,9 @@ name := "wordCount"
 
 version := "0.1"
 
-scalaVersion := "2.13.10"
+scalaVersion := "2.12.0"
 
-val sparkVersion = "3.3.1"
+val sparkVersion = "3.1.2"
 
 resolvers ++= Seq(
   "apache-snapshots" at "https://reporitory.apache.org/snapshots"
