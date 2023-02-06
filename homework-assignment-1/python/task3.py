@@ -28,9 +28,6 @@ business_path = sys.argv[2]
 resultA_path = sys.argv[3]
 resultB_path = sys.argv[4]
 
-# initialize object to store the result for task B
-resultsB = {}
-
 # set spark app config
 sc = SparkContext(conf=SparkConf().setAppName("hw1-task2").setMaster("local[*]"))
 sc.setLogLevel('WARN')
@@ -57,6 +54,17 @@ combinedRDD = combinedRDD \
     .map(lambda entry: (entry[0], entry[1][0] / entry[1][1])) \
     .sortBy(lambda entry: [-entry[1], entry[0]]) \
     .collect()
+
+'''
+Part B. Compare the results for the same tasks using different methods and reason about it
+'''
+
+# create output object for results of task B
+resultsB = {
+    'm1': 0,
+    'm2': 0,
+    'reason': 'default'
+}
 
 # print the results on console for local execution
 if sys.argv[len(sys.argv) - 1] == '--local':
