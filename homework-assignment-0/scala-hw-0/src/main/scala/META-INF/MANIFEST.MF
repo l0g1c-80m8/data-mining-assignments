@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
-Main-Class: hw_0.WordCount
+Main-Class: org.rpatel.dsci553_assignments.WordCount
 
