@@ -36,14 +36,15 @@ results = {}
 sc = SparkContext(conf=SparkConf().setAppName("hw1-task2").setMaster("local[*]"))
 sc.setLogLevel('WARN')
 
-# read the data and construct a spark RDD object
-datasetRDD = sc.textFile(dataset_path)
-
 '''
 Part 1. RDD construction using default partition scheme
 '''
+
+# read the data and construct a spark RDD object
+datasetRDD1 = sc.textFile(dataset_path)
+
 # convert each text line into json objects and cache the RDD for processing
-defaultDatasetRDD = datasetRDD.map(lambda rawLine: json.loads(rawLine))
+defaultDatasetRDD = datasetRDD1.map(lambda rawLine: json.loads(rawLine))
 
 # first clock measurement
 ts1 = datetime.now()
@@ -67,16 +68,21 @@ Part 2. RDD construction using custom partition scheme
 
 Reference: https://www.talend.com/resources/intro-apache-spark-partitioning/
 '''
+
+# read the data and construct a spark RDD object
+datasetRDD2 = sc.textFile(dataset_path)
+
 # convert each text line into json objects and cache the RDD for processing
-customizedDatasetRDD = datasetRDD.map(lambda rawLine: json.loads(rawLine))
+customizedDatasetRDD = datasetRDD2.map(lambda rawLine: json.loads(rawLine))
 
 # first clock measurement
 ts1 = datetime.now()
 
 customizedDatasetRDD.map(lambda reviewObj: (reviewObj['business_id'], 1)) \
-    .partitionBy(numPartitions=n_partition, partitionFunc=lambda business_id: ord(business_id[-1]) % n_partition) \
+    .partitionBy(n_partition, lambda business_id: ord(business_id[-1])) \
     .reduceByKey(add) \
     .takeOrdered(10, key=lambda business_count: [-business_count[1], business_count])
+
 # second clock measurement
 ts2 = datetime.now()
 
