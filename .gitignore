@@ -6,3 +6,7 @@
 
 # ignore output
 **/out/
+
+# ignore scala project files
+**/**/project/target/
+**/**/target/
