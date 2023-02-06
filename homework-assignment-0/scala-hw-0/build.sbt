@@ -2,7 +2,7 @@ name := "wordCount"
 
 version := "0.1"
 
-scalaVersion := "3.2.1"
+scalaVersion := "2.13.10"
 
 val sparkVersion = "3.3.1"
 

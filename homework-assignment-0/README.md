@@ -3,7 +3,7 @@
 The purpose of this homework is to get familiar with Vocareum Lab infrastructure and the
 environment to be used to run the project submission on.
 
-### To run the programs on Vocareum terminal the following steps are needed:
+### To run the python programs on Vocareum terminal the following steps are needed:
 
 1. Set Java version to 1.8 using: ```export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64```
 2. Then add the path to the environment variables: ```export PATH=$JAVA_HOME/bin:$PATH```
@@ -19,7 +19,7 @@ Vocareum demo run example:
 
 ![Homework 0 Demo Run](../assets/hw0-demo-run-vocareum.png)
 
-### To run the files locally, perform the following steps:
+### To run the python files locally, perform the following steps:
 1. Install JDK 1.8.
 2. Install Spark Hadoop for mac and set ```SPARK_HOME```, ```HADOOP_HOME``` environment variables to the spark root directory and the hadoop root directory respectively.
 3. Install python 3.6 ([ref. here](https://github.com/pyenv/pyenv/issues/1768#issuecomment-1403097990) for macs with M series chips) though newer versions may work.
@@ -47,3 +47,11 @@ or use the path of any other JDK distribution if multiple of them are installed.
 ```
 export SPARK_LOCAL_IP="127.0.0.1"
 ```
+
+### To run Scala program locally, use the following command:
+```
+/Library/spark-3.3.1-bin-hadoop3/bin/spark-submit ./out/artifacts/scala_hw_0_jar/scala-hw-0.jar
+```
+
+replace the ```spark-submit``` and ```.jar``` file output accordingly.
+
