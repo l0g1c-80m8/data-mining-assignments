@@ -37,6 +37,7 @@ Local demo run example:
 JDK - 1.8 (jdk1.8.0_361.jdk)
 SPARK - 3.3.1 (spark-3.3.1-bin-hadoop3)
 python - 3.6 or (3.x > 3.6 but some syntax might not work on vocareum)
+pyspark - 3.3.1
 ```
 
 ## Scala
