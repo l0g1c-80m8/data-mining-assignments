@@ -49,7 +49,6 @@ defaultDatasetRDD = datasetRDD.map(lambda rawLine: json.loads(rawLine))
 ts1 = datetime.now()
 
 defaultDatasetRDD.map(lambda reviewObj: (reviewObj['business_id'], 1)) \
-    .partitionBy(numPartitions=n_partition) \
     .reduceByKey(add) \
     .takeOrdered(10, key=lambda business_count: [-business_count[1], business_count])
 
