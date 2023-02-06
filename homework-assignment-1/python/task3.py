@@ -10,8 +10,6 @@ import json
 import os
 import sys
 
-from datetime import datetime, timedelta
-from operator import add
 from pyspark import SparkConf, SparkContext
 
 os.environ['PYSPARK_PYTHON'] = sys.executable
