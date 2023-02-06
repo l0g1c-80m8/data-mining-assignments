@@ -2,7 +2,7 @@
 .idea/
 
 # ignore datasets
-homework-assignment-1/dataset/
+**/dataset/
 
 # ignore output
-homework-assignment-1/out/
+**/out/
