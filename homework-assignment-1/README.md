@@ -31,8 +31,8 @@ place during the computation and minimizing the implicit shuffle operations betw
 operations.
 
 Run the program using the following commands (or refer [here](../homework-assignment-0/README.md) for manual execution):
-- Locally: ```python python/task2.py dataset/test_review.json out/task2_out.json 2 --local```
-- Vocareum: ```./run.sh task2.py ../resource/asnlib/publicdata/review.json ./task2-out.json 2```
+- Locally: ```python python/task2.py dataset/test_review.json out/task2_out.json 4 --local```
+- Vocareum: ```./run.sh task2.py ../resource/asnlib/publicdata/review.json ./task2-out.json 21```
 
 ### Task 3: Exploration on Multiple Datasets
 
