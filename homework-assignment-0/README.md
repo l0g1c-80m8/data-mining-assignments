@@ -37,12 +37,16 @@ Local demo run example:
 
 ![Homework 0 Demo Run](../assets/hw0-demo-run-local.png)
 
-### To run Scala program locally, use the following command:
+### To run Scala program locally, build the artifacts (jars) and use the following command:
 ```
-./run.sh --class org.rpatel.dsci553_assignments.WordCount ./out/artifacts/scala_hw_0_jar/scala-hw-0.jar ../text.txt
+./run-local.sh --class org.rpatel.dsci553_assignments.WordCount ./out/artifacts/scala_hw_0_jar/scala-hw-0.jar ../text.txt
 ```
 
 replace the ```spark-submit``` and ```.jar``` file output accordingly.
+
+Local demo run example:
+
+![Homework 0 Demo Run](../assets/hw0-demo-run-spark-local.png)
 
 ### Versions 
 ```
