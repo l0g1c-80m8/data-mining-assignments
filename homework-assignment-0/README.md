@@ -1,7 +1,9 @@
-## Homework 0: Word Count of a File using Map-Reduce
+# Homework 0: Word Count of a File using Map-Reduce
 
 The purpose of this homework is to get familiar with Vocareum Lab infrastructure and the
 environment to be used to run the project submission on.
+
+## Python (with pyspark)
 
 ### To run the python programs on Vocareum terminal the following steps are needed:
 
@@ -26,6 +28,10 @@ Vocareum demo run example:
 4. Alternatively, refer [this](https://www.youtube.com/watch?v=5gFGVDqEYeY) video.
 5. Run the program using ```python word_count.py```.
 
+Local demo run example:
+
+![Homework 0 Demo Run](../assets/hw0-demo-run-local.png)
+
 ### Versions 
 ```
 JDK - 1.8 (jdk1.8.0_361.jdk)
@@ -33,9 +39,18 @@ SPARK - 3.3.1 (spark-3.3.1-bin-hadoop3)
 python - 3.6 or (3.x > 3.6 but some syntax might not work on vocareum)
 ```
 
-Local demo run example:
+## Scala
 
-![Homework 0 Demo Run](../assets/hw0-demo-run-local.png)
+### To run Scala jar on Vocareum, and use the following command:
+```
+./run.sh --class org.rpatel.dsci553_assignments.WordCount ./scala-hw-0.jar ../text.txt
+```
+
+replace the ```spark-submit``` and ```.jar``` file output accordingly.
+
+Vocareum demo run example:
+
+![Homework 0 Demo Run](../assets/hw0-demo-run-spark-vocareum.png)
 
 ### To run Scala program locally, build the artifacts (jars) and use the following command:
 ```
@@ -55,7 +70,7 @@ SPARK - 3.1.2 (spark-3.1.2-bin-hadoop3.2)
 scala - 2.12.17 (sbt: org.scala-lang:scala-library:2.12.17:jar)
 ```
 
-### Troubleshoot:
+## Troubleshoot
 - Path not configured properly for spark or hadoop - add the following in ```~/.zshrc``` or ```~/.zprofile``` depending on whichever is used:
 ```
 # Set env vars for spark and hadoop
