@@ -50,7 +50,7 @@ export SPARK_LOCAL_IP="127.0.0.1"
 
 ### To run Scala program locally, use the following command:
 ```
-/Library/spark-3.3.1-bin-hadoop3/bin/spark-submit ./out/artifacts/scala_hw_0_jar/scala-hw-0.jar
+./run.sh --class org.rpatel.dsci553_assignments.WordCount ./out/artifacts/scala_hw_0_jar/scala-hw-0.jar ../text.txt
 ```
 
 replace the ```spark-submit``` and ```.jar``` file output accordingly.
