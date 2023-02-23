@@ -5,7 +5,6 @@ Task 1
 Read data from the input file and implement SON algorithm with PCY algorithm to fund frequent item-sets.
 """
 
-
 import os
 import sys
 
@@ -132,7 +131,14 @@ def apriori(chunk):
 def print_item_sets_by_count(item_sets_by_size, header):
     print(header)
     for size, candidates in item_sets_by_size.items():
-        print(candidates, '\n')
+        if size == 1:
+            for candidate in candidates[: -1]:
+                print('(\'{}\')'.format(candidate), end=',')
+            print('(\'{}\')\n'.format(candidates[-1]))
+        else:
+            for candidate in candidates[: -1]:
+                print(candidate, end=',')
+            print(candidates[-1], '\n')
 
 
 def get_frequents(chunk, candidates_by_size):
@@ -186,29 +192,28 @@ def execute_son():
     print_item_sets_by_count(frequents_by_size, 'Frequent Itemsets:')
 
 
-if __name__ == '__main__':
-    # set executables
-    os.environ['PYSPARK_PYTHON'] = sys.executable
-    os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
+# set executables
+os.environ['PYSPARK_PYTHON'] = sys.executable
+os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
 
-    # initialize program parameters
-    params = dict()
-    parse_args()
+# initialize program parameters
+params = dict()
+parse_args()
 
-    # create spark context
-    sc = SparkContext(conf=SparkConf().setAppName(params['app_name']).setMaster("local[*]"))
-    sc.setLogLevel('ERROR')
+# create spark context
+sc = SparkContext(conf=SparkConf().setAppName(params['app_name']).setMaster("local[*]"))
+sc.setLogLevel('ERROR')
 
-    # global vars
-    rdd = construct_rdd()
-    total_transaction_count = rdd.count()
-    frequent_item_sets = list()
+# global vars
+rdd = construct_rdd()
+total_transaction_count = rdd.count()
+frequent_item_sets = list()
 
-    # run SON with Apriori
-    start_ts = datetime.now()
-    execute_son()
-    end_ts = datetime.now()
-    print('Duration: ', (end_ts - start_ts) / timedelta(microseconds=1))
+# run SON with Apriori
+start_ts = datetime.now()
+execute_son()
+end_ts = datetime.now()
+print('Duration: ', (end_ts - start_ts) / timedelta(microseconds=1))
 
-    # exit without errors
-    exit(0)
+# exit without errors
+exit(0)
