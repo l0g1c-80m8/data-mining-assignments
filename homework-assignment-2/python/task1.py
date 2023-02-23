@@ -128,17 +128,20 @@ def apriori(chunk):
     return list(map(lambda frequents: (frequents[0], frequents[1]), chunk_frequents_comprehensive.items()))
 
 
-def print_item_sets_by_count(item_sets_by_size, header):
-    print(header)
-    for size, candidates in item_sets_by_size.items():
-        if size == 1:
-            for candidate in candidates[: -1]:
-                print('(\'{}\')'.format(candidate), end=',')
-            print('(\'{}\')\n'.format(candidates[-1]))
-        else:
-            for candidate in candidates[: -1]:
-                print(candidate, end=',')
-            print(candidates[-1], '\n')
+def write_item_sets_by_count(item_sets_by_size, header, mode ='w'):
+    with open(params['out_file'], mode) as file_handle:
+        file_handle.write(header)
+        file_handle.write('\n')
+        for size, candidates in item_sets_by_size.items():
+            if size == 1:
+                for candidate in candidates[: -1]:
+                    file_handle.write('(\'{}\'),'.format(candidate))
+                file_handle.write('(\'{}\')\n\n'.format(candidates[-1]))
+            else:
+                for candidate in candidates[: -1]:
+                    file_handle.write('{},'.format(candidate))
+                file_handle.write(str(candidates[-1]))
+                file_handle.write('\n\n')
 
 
 def get_frequents(chunk, candidates_by_size):
@@ -174,7 +177,7 @@ def execute_son():
     for size, candidate_item_sets in candidates:
         candidates_by_size[size] = sorted(set(reduce(lambda lis1, lis2: lis1 + lis2, candidate_item_sets, list())))
     # print the candidates
-    print_item_sets_by_count(candidates_by_size, 'Candidates:')
+    write_item_sets_by_count(candidates_by_size, 'Candidates:', 'w')
 
     # find the truly frequent item sets - eliminate false positives - second phase
     frequents = list(filter(
@@ -189,7 +192,7 @@ def execute_son():
             frequents_by_size[1].append(frequent_item_set)
     for frequent_item_set in frequents_by_size:
         frequents_by_size[frequent_item_set] = sorted(frequents_by_size[frequent_item_set])
-    print_item_sets_by_count(frequents_by_size, 'Frequent Itemsets:')
+    write_item_sets_by_count(frequents_by_size, 'Frequent Itemsets:', 'a')
 
 
 # set executables
