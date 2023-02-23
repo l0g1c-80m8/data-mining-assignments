@@ -4,6 +4,8 @@ Task 1
 
 Read data from the input file and implement SON algorithm with PCY algorithm to fund frequent item-sets.
 """
+
+
 import os
 import sys
 
