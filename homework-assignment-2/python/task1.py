@@ -216,7 +216,7 @@ frequent_item_sets = list()
 start_ts = datetime.now()
 execute_son()
 end_ts = datetime.now()
-print('Duration: ', (end_ts - start_ts) / timedelta(microseconds=1))
+print('Duration: ', (end_ts - start_ts).total_seconds())
 
 # exit without errors
 exit(0)
