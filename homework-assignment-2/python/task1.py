@@ -68,6 +68,8 @@ def get_frequents_in_chunk(
 ):
     frequents = list()
     candidates = combinations(chunk_frequent_prev, 2)
+    if frequent_item_set_size == 2:
+        candidates = map(lambda pair: tuple(sorted(pair)), combinations(chunk_frequent_prev, 2))
     if frequent_item_set_size > 2:
         candidates = filter(
             lambda candidate_set: len(candidate_set) == frequent_item_set_size,
@@ -128,7 +130,7 @@ def apriori(chunk):
     return list(map(lambda frequents: (frequents[0], frequents[1]), chunk_frequents_comprehensive.items()))
 
 
-def write_item_sets_by_count(item_sets_by_size, header, mode ='w'):
+def write_item_sets_by_count(item_sets_by_size, header, mode='w'):
     with open(params['out_file'], mode) as file_handle:
         file_handle.write(header)
         file_handle.write('\n')
