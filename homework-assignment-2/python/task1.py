@@ -9,8 +9,8 @@ import sys
 
 from collections import defaultdict, Counter
 from datetime import datetime, timedelta
+from functools import reduce
 from itertools import chain, combinations, groupby
-from operator import add
 from pyspark import SparkConf, SparkContext
 
 
@@ -66,29 +66,19 @@ def get_frequents_in_chunk(
 ):
     frequents = list()
     candidates = combinations(chunk_frequent_prev, 2)
-    if frequent_item_set_size == 2:
-        for candidate in candidates:
-            candidate_count = 0
-            for transaction in transactions:
-                if set(candidate).issubset(transaction):
-                    candidate_count += 1
-                if candidate_count >= chunk_support:
-                    frequents.append(candidate)
-                    break
-    else:
+    if frequent_item_set_size > 2:
         candidates = filter(
             lambda candidate_set: len(candidate_set) == frequent_item_set_size,
             map(lambda candidate_pair: tuple(sorted(set(candidate_pair[0]).union(candidate_pair[1]))), candidates)
         )
-        for candidate in set(candidates):
-            candidate_count = 0
-            for transaction in transactions:
-                if set(candidate).issubset(transaction):
-                    candidate_count += 1
-                if candidate_count >= chunk_support:
-                    frequents.append(tuple(candidate))
-                    break
-        print(frequents)
+    for candidate in set(candidates):
+        candidate_count = 0
+        for transaction in transactions:
+            if set(candidate).issubset(transaction):
+                candidate_count += 1
+            if candidate_count >= chunk_support:
+                frequents.append(candidate)
+                break
 
     return frequents
 
@@ -136,13 +126,28 @@ def apriori(chunk):
     return list(map(lambda frequents: (frequents[0], frequents[1]), chunk_frequents_comprehensive.items()))
 
 
+def print_candidates(candidates_by_size):
+    print('Candidates:')
+    for size, candidates in candidates_by_size.items():
+        print(candidates, '\n')
+
+
 def execute_son():
     # get the rdd depending on the params
     transaction_rdd = construct_rdd()
-    # find candidates from individual chunks
-    candidates = transaction_rdd.mapPartitions(apriori)
-    frequents = candidates.collect()
-    print(frequents)
+    # find candidates from individual chunks - first phase
+    candidates_rdd = transaction_rdd.mapPartitions(apriori)
+    candidates = candidates_rdd \
+        .groupByKey() \
+        .sortBy(lambda freq_set: freq_set[0]) \
+        .collect()
+    candidates_by_size = defaultdict(list)
+    for size, candidate_item_sets in candidates:
+        candidates_by_size[size] = sorted(set(reduce(lambda lis1, lis2: lis1 + lis2, candidate_item_sets, list())))
+    # print the candidates
+    # print_candidates(candidates_by_size)
+
+    # find the truly frequent item sets - eliminate false positives - second phase
 
 
 if __name__ == '__main__':
