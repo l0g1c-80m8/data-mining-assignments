@@ -11,6 +11,7 @@ from collections import defaultdict, Counter
 from datetime import datetime, timedelta
 from functools import reduce
 from itertools import chain, combinations, groupby
+from operator import add
 from pyspark import SparkConf, SparkContext
 
 
@@ -126,10 +127,30 @@ def apriori(chunk):
     return list(map(lambda frequents: (frequents[0], frequents[1]), chunk_frequents_comprehensive.items()))
 
 
-def print_candidates(candidates_by_size):
-    print('Candidates:')
-    for size, candidates in candidates_by_size.items():
+def print_item_sets_by_count(item_sets_by_size, header):
+    print(header)
+    for size, candidates in item_sets_by_size.items():
         print(candidates, '\n')
+
+
+def get_frequents(chunk, candidates_by_size):
+    candidates_by_count = defaultdict(int)
+    candidate_counts = []
+    # create a list of item sets from transaction chunk/partition
+    transactions = list(map(lambda transaction: transaction[1], chunk))
+    # calculate the adjusted support for this chunk/partition
+    chunk_support = params['support'] * len(transactions) / total_transaction_count
+
+    for size, candidate_item_sets in candidates_by_size.items():
+        for candidate_item_set in candidate_item_sets:
+            for transaction in transactions:
+                item_set = set(candidate_item_set) if type(candidate_item_set) == tuple else {candidate_item_set}
+                if set(item_set).issubset(transaction):
+                    candidates_by_count[candidate_item_set] += 1
+    for candidate_item_set, count in candidates_by_count.items():
+        candidate_counts.append((candidate_item_set, count))
+
+    return candidate_counts
 
 
 def execute_son():
@@ -145,9 +166,22 @@ def execute_son():
     for size, candidate_item_sets in candidates:
         candidates_by_size[size] = sorted(set(reduce(lambda lis1, lis2: lis1 + lis2, candidate_item_sets, list())))
     # print the candidates
-    # print_candidates(candidates_by_size)
+    print_item_sets_by_count(candidates_by_size, 'Candidates:')
 
     # find the truly frequent item sets - eliminate false positives - second phase
+    frequents = list(filter(
+        lambda item_set_count: item_set_count[1] >= params['support'],
+        transaction_rdd.mapPartitions(lambda chunk: get_frequents(chunk, candidates_by_size)).reduceByKey(add).collect()
+    ))
+    frequents_by_size = defaultdict(list)
+    for frequent_item_set, _ in frequents:
+        if type(frequent_item_set) == tuple:
+            frequents_by_size[len(frequent_item_set)].append(frequent_item_set)
+        else:
+            frequents_by_size[1].append(frequent_item_set)
+    for frequent_item_set in frequents_by_size:
+        frequents_by_size[frequent_item_set] = sorted(frequents_by_size[frequent_item_set])
+    print_item_sets_by_count(frequents_by_size, 'Frequent Itemsets:')
 
 
 if __name__ == '__main__':
