@@ -169,4 +169,10 @@ if __name__ == '__main__':
     frequent_item_sets = list()
 
     # run SON with Apriori
+    start_ts = datetime.now()
     execute_son()
+    end_ts = datetime.now()
+    print('Duration: ', (end_ts - start_ts) / timedelta(microseconds=1))
+
+    # exit without errors
+    exit(0)
