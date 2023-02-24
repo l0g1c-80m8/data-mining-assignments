@@ -42,7 +42,7 @@ def write_csv(header_list, rows):
             file_handle.write('\n')
 
 
-def combine_ids(data_row, header_dict):
+def combine_ids_from_row(data_row, header_dict):
     row_transaction_date = data_row[header_dict["TRANSACTION_DT"]]
     row_transaction_date = row_transaction_date[: -4] + row_transaction_date[-2:]
     row_customer_id = data_row[header_dict["CUSTOMER_ID"]]
@@ -63,7 +63,7 @@ def parse_raw_data():
     raw_rdd = sc.textFile(params['in_file']) \
         .map(lambda line: line.replace('"', '').strip().split(',')) \
         .filter(lambda line: line != file_headers) \
-        .map(lambda line: combine_ids(line, header_dict))
+        .map(lambda line: combine_ids_from_row(line, header_dict))
     write_csv(['DATE-CUSTOMER_ID', 'PRODUCT_ID'], raw_rdd.collect(), )
 
 
