@@ -9,7 +9,7 @@ import os
 import sys
 
 from collections import defaultdict, Counter
-from datetime import datetime, timedelta
+from datetime import datetime
 from functools import reduce
 from itertools import chain, combinations, groupby
 from operator import add
@@ -212,7 +212,6 @@ sc.setLogLevel('ERROR')
 # global vars
 rdd = construct_rdd()
 total_transaction_count = rdd.count()
-frequent_item_sets = list()
 
 # run SON with Apriori
 start_ts = datetime.now()
