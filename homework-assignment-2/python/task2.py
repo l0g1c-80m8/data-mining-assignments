@@ -83,7 +83,7 @@ def parse_processed_data():
 def filter_processed_data():
     processed_data_rdd = processed_rdd.groupByKey()
     filtered_data_rdd = processed_data_rdd \
-        .filter(lambda id_list: len(id_list[1]) >= params['threshold']) \
+        .filter(lambda id_list: len(id_list[1]) > params['threshold']) \
         .map(lambda id_list: (id_list[0], set(id_list[1])))
     return filtered_data_rdd
 
