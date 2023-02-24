@@ -9,11 +9,6 @@ with Apriori algorithm to fund frequent item-sets.
 import os
 import sys
 
-from collections import defaultdict, Counter
-from datetime import datetime, timedelta
-from functools import reduce
-from itertools import chain, combinations, groupby
-from operator import add
 from pyspark import SparkConf, SparkContext
 
 
@@ -25,7 +20,7 @@ def parse_args():
 
     # read program arguments
     params['app_name'] = 'hw2-task2'
-    params['case_number'] = int(sys.argv[1])
+    params['threshold'] = int(sys.argv[1])
     params['support'] = int(sys.argv[2])
     params['in_file'] = sys.argv[3]
     params['out_file'] = sys.argv[4]
@@ -52,19 +47,40 @@ def combine_ids_from_row(data_row, header_dict):
     return combined_id, row_product_id
 
 
-def parse_raw_data():
+def get_header_dict(file_name, encoding='utf-8'):
     header_dict = defaultdict(int)
-    file_headers = ''
-    with open(params['in_file'], 'r', encoding='utf-8-sig') as file_handle:
-        file_headers = file_handle.readline().replace('"', '').strip().split(',')
-        for idx, header in enumerate(file_headers):
+    file_header_row = []
+    with open(file_name, 'r', encoding=encoding) as file_handle:
+        file_header_row = file_handle.readline().replace('"', '').strip().split(',')
+        for idx, header in enumerate(file_header_row):
             header_dict[header] = idx
+    return header_dict, file_header_row
 
-    raw_rdd = sc.textFile(params['in_file']) \
+
+def parse_raw_data():
+    header_dict, file_header_row = get_header_dict(params['in_file'], 'utf-8-sig')
+    raw_data_rdd = sc.textFile(params['in_file']) \
         .map(lambda line: line.replace('"', '').strip().split(',')) \
-        .filter(lambda line: line != file_headers) \
+        .filter(lambda line: line != file_header_row) \
         .map(lambda line: combine_ids_from_row(line, header_dict))
-    write_csv(['DATE-CUSTOMER_ID', 'PRODUCT_ID'], raw_rdd.collect(), )
+    write_csv(['DATE-CUSTOMER_ID', 'PRODUCT_ID'], raw_data_rdd.collect(), )
+
+
+def parse_processed_data():
+    header_dict, file_header_row = get_header_dict(params['processed_out_file'], 'utf-8')
+    file_header_tuple = tuple(file_header_row)
+    processed_data_rdd = sc.textFile(params['processed_out_file']) \
+        .map(lambda line: tuple(line.split(','))) \
+        .filter(lambda line: line != file_header_tuple)
+    return processed_data_rdd
+
+
+def filter_processed_data():
+    processed_data_rdd = processed_rdd.groupByKey()
+    filtered_data_rdd = processed_data_rdd \
+        .filter(lambda id_list: len(id_list[1]) >= params['threshold']) \
+        .map(lambda id_list: (id_list[0], set(id_list[1])))
+    return filtered_data_rdd
 
 
 # set executables
@@ -79,8 +95,14 @@ parse_args()
 sc = SparkContext(conf=SparkConf().setAppName(params['app_name']).setMaster("local[*]"))
 sc.setLogLevel('ERROR')
 
-# parse raw data and generate the intermediate file
+# Part A. parse raw data and generate the intermediate file
 parse_raw_data()
+
+# Part B. use the intermediate file, filter the counts and apply SON + Apriori
+processed_rdd = parse_processed_data()
+# filter the rdd tp get only those transactions that meet the filter threshold
+filtered_rdd = filter_processed_data()
+print(filtered_rdd.take(5))
 
 # exit without errors
 exit(0)
