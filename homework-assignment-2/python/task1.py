@@ -135,6 +135,8 @@ def write_item_sets_by_count(item_sets_by_size, header, mode='w'):
         file_handle.write(header)
         file_handle.write('\n')
         for size, candidates in item_sets_by_size.items():
+            if len(candidates) == 0:
+                file_handle.write('\n\n')
             if size == 1:
                 for candidate in candidates[: -1]:
                     file_handle.write('(\'{}\'),'.format(candidate))
