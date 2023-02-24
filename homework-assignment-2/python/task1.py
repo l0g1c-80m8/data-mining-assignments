@@ -2,7 +2,7 @@
 Homework Assignment 2
 Task 1
 
-Read data from the input file and implement SON algorithm with PCY algorithm to fund frequent item-sets.
+Read data from the input file and implement SON algorithm with Apriori algorithm to fund frequent item-sets.
 """
 
 import os
