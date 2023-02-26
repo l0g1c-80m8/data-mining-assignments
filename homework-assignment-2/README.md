@@ -2,6 +2,16 @@
 
 This homework is based on frequent item-set mining on a distributed environment. Exact specifications are given in the  [description file](Homework%202%20Description.pdf).
 
+<!-- TOC -->
+* [Homework 2: Frequent Item-set Mining](#homework-2--frequent-item-set-mining)
+  * [Tasks](#tasks)
+    * [Task 1: Frequent Item-set mining on simulated dataset](#task-1--frequent-item-set-mining-on-simulated-dataset)
+    * [Task 2: Frequent Item-set mining on real-world dataset](#task-2--frequent-item-set-mining-on-real-world-dataset)
+  * [Dataset](#dataset)
+    * [Simulated Dataset: ```small1.csv```, ```small2.csv```](#simulated-dataset--small1csv--small2csv)
+    * [Real-world Dataset 2: ```ta_feng_all_months_merged.csv```](#real-world-dataset-2--tafengallmonthsmergedcsv)
+<!-- TOC -->
+
 ## Tasks
 
 ### Task 1: Frequent Item-set mining on simulated dataset
