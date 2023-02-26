@@ -2,6 +2,17 @@
 
 This homework involves data exploration and analytics on Yelp data set which is available in JSON format. For the exact homework specs refer to the [description file](Homework%201%20Description.pdf).
 
+<!-- TOC -->
+* [Homework 1: Analytics on Yelp Data](#homework-1--analytics-on-yelp-data)
+  * [Tasks](#tasks)
+    * [Task 1: Data Exploration](#task-1--data-exploration)
+    * [Task 2: Partition](#task-2--partition)
+    * [Task 3: Exploration on Multiple Datasets](#task-3--exploration-on-multiple-datasets)
+  * [Dataset](#dataset)
+    * [File 1: ```review.json```](#file-1--reviewjson)
+    * [File 2: ```business.json```](#file-2--businessjson)
+<!-- TOC -->
+
 ## Tasks
 
 ### Task 1: Data Exploration
