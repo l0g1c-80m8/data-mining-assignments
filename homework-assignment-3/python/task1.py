@@ -10,6 +10,7 @@ Representation: Businesses (sets) are represented in the dimension of users (ele
 import os
 import sys
 
+from itertools import chain
 from pyspark import SparkConf, SparkContext
 
 
@@ -39,6 +40,20 @@ def parse_dataset():
         .map(lambda business_set: (business_set[0], set(business_set[1])))
 
 
+def get_mappings():
+    business_ids = dataset_rdd.map(lambda business_set: business_set[0]).collect()
+    user_ids = list(chain.from_iterable(dataset_rdd.map(lambda business_set: business_set[1]).collect()))
+
+    def map_by_counter(ids, _map, counter):
+        for _id in ids:
+            if _id not in _map:
+                _map[_id] = counter
+                counter += 1
+        return _map
+
+    return map_by_counter(business_ids, dict(), 0), map_by_counter(user_ids, dict(), 0)
+
+
 if __name__ == '__main__':
     # set executables
     os.environ['PYSPARK_PYTHON'] = sys.executable
@@ -53,6 +68,7 @@ if __name__ == '__main__':
 
     # dataset rdd
     dataset_rdd = parse_dataset()
-    print(dataset_rdd.take(10))
 
-
+    # get element (row / users) and set (cols / businesses) mappings
+    element_map, set_map = get_mappings()
+    print(len(element_map), len(set_map))
