@@ -3,6 +3,7 @@
 There are two tasks in this homework. The goal is to get familiar with Locality Sensitive
 Hashing (LSH), and different types of collaborative-filtering recommendation systems. The dataset
 required for this assignment is a subset from the Yelp dataset used in the previous assignments.
+For task specifications look at the description file [here](Homework%203%20Description.pdf). 
 
 ## Tasks
 
