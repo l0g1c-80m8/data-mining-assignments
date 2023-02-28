@@ -10,6 +10,7 @@ Representation: Businesses (sets) are represented in the dimension of users (ele
 import os
 import sys
 
+from collections import namedtuple
 from itertools import chain
 from pyspark import SparkConf, SparkContext
 
@@ -54,6 +55,37 @@ def get_mappings():
     return map_by_counter(business_ids, dict(), 0), map_by_counter(user_ids, dict(), 0)
 
 
+def construct_hashers(num_rows):
+    # https://stackoverflow.com/a/25104050/16112875
+    carter_wegman = lambda a, b, m: lambda x: (a * x + b) % m
+
+    HasherParams = namedtuple('HasherParams', ['a', 'b', 'm'])
+
+    hasher_params_list = [
+        HasherParams(a=1, b=1, m=num_rows),
+        HasherParams(a=3, b=1, m=num_rows)
+    ]
+
+    return [carter_wegman(hash_params.a, hash_params.b, hash_params.m) for hash_params in hasher_params_list]
+
+
+def get_signature():
+    def _find_min_sig(id_set_pair):
+        _id = id_set_pair[0]
+        _set = id_set_pair[1]
+
+        sig_vector = list()
+        for hasher in hashers:
+            sig_val = sys.maxsize
+            for element in _set:
+                ele_val = hasher(element_map[element])
+                sig_val = min(sig_val, ele_val)
+            sig_vector.append(sig_val)
+        return _id, sig_vector
+
+    return dataset_rdd.map(_find_min_sig)
+
+
 if __name__ == '__main__':
     # set executables
     os.environ['PYSPARK_PYTHON'] = sys.executable
@@ -70,5 +102,10 @@ if __name__ == '__main__':
     dataset_rdd = parse_dataset()
 
     # get element (row / users) and set (cols / businesses) mappings
-    element_map, set_map = get_mappings()
-    print(len(element_map), len(set_map))
+    set_map, element_map = get_mappings()
+
+    # define a collection of hash functions
+    hashers = construct_hashers(len(element_map))
+
+    signature = get_signature()
+    print(signature.collect())
