@@ -11,6 +11,7 @@ import os
 import sys
 
 from collections import namedtuple
+from datetime import datetime
 from itertools import chain
 from pyspark import SparkConf, SparkContext
 
@@ -26,6 +27,8 @@ def parse_args():
     run_time_params['app_name'] = 'hw3-task1'
     run_time_params['in_file'] = sys.argv[1]
     run_time_params['out_file'] = sys.argv[2]
+    run_time_params['bands'] = 1
+    run_time_params['n_hashers'] = 2
     return run_time_params
 
 
@@ -41,7 +44,7 @@ def parse_dataset():
         .map(lambda business_set: (business_set[0], set(business_set[1])))
 
 
-def get_mappings():
+def get_mappings(dataset_rdd):
     business_ids = dataset_rdd.map(lambda business_set: business_set[0]).collect()
     user_ids = list(chain.from_iterable(dataset_rdd.map(lambda business_set: business_set[1]).collect()))
 
@@ -56,20 +59,20 @@ def get_mappings():
 
 
 def construct_hashers(num_rows):
-    # https://stackoverflow.com/a/25104050/16112875
-    carter_wegman = lambda a, b, m: lambda x: (a * x + b) % m
-
     HasherParams = namedtuple('HasherParams', ['a', 'b', 'm'])
-
     hasher_params_list = [
         HasherParams(a=1, b=1, m=num_rows),
         HasherParams(a=3, b=1, m=num_rows)
     ]
 
-    return [carter_wegman(hash_params.a, hash_params.b, hash_params.m) for hash_params in hasher_params_list]
+    # https://stackoverflow.com/a/25104050/16112875
+    return [
+        lambda x: (hash_params.a * x + hash_params.b) % hash_params.m
+        for hash_params in hasher_params_list
+    ]
 
 
-def get_signature():
+def get_signature(dataset_rdd, hashers, element_map):
     def _find_min_sig(id_set_pair):
         _id = id_set_pair[0]
         _set = id_set_pair[1]
@@ -86,6 +89,21 @@ def get_signature():
     return dataset_rdd.map(_find_min_sig)
 
 
+def main():
+    # dataset rdd
+    dataset_rdd = parse_dataset()
+
+    # get element (row / users) and set (cols / businesses) mappings
+    set_map, element_map = get_mappings(dataset_rdd)
+
+    # define a collection of hash functions
+    hashers = construct_hashers(len(element_map))
+
+    # construct a column-wise signature matrix
+    signature = get_signature(dataset_rdd, hashers, element_map)
+    print(signature.collect())
+
+
 if __name__ == '__main__':
     # set executables
     os.environ['PYSPARK_PYTHON'] = sys.executable
@@ -98,14 +116,11 @@ if __name__ == '__main__':
     sc = SparkContext(conf=SparkConf().setAppName(params['app_name']).setMaster("local[*]"))
     sc.setLogLevel('ERROR')
 
-    # dataset rdd
-    dataset_rdd = parse_dataset()
+    # run min-hashing + locality sensitive hashing
+    start_ts = datetime.now()
+    main()
+    end_ts = datetime.now()
+    print('Duration: ', (end_ts - start_ts).total_seconds())
 
-    # get element (row / users) and set (cols / businesses) mappings
-    set_map, element_map = get_mappings()
-
-    # define a collection of hash functions
-    hashers = construct_hashers(len(element_map))
-
-    signature = get_signature()
-    print(signature.collect())
+    # exit without errors
+    exit(0)
