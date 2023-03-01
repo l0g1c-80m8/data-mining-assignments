@@ -89,6 +89,28 @@ def get_signature(dataset_rdd, hashers, element_map):
     return dataset_rdd.map(_find_min_sig)
 
 
+def get_band_wise_rdd(signature):
+    r = params['n_hashers'] // params['bands']
+    return signature \
+        .map(
+        lambda business_set: (
+            business_set[0],
+            list(map(
+                lambda chunk_num: tuple(business_set[1][chunk_num * r: chunk_num * r + r]),
+                range(params['bands'])
+            ))
+        )
+    )
+
+
+def get_candidate_rdd(band_wise_rdd):
+    return band_wise_rdd \
+        .cartesian(band_wise_rdd) \
+        .filter(lambda pair: pair[0][0] < pair[1][0]) \
+        .filter(lambda pair: any([hash(tup1) == hash(tup2) for tup1, tup2 in zip(pair[0][1], pair[1][1])])) \
+        .map(lambda pair: (pair[0][0], pair[1][0]))
+
+
 def main():
     # dataset rdd
     dataset_rdd = parse_dataset()
@@ -103,26 +125,11 @@ def main():
     signature = get_signature(dataset_rdd, hashers, element_map)
 
     # chunk each column into bands
-    r = params['n_hashers'] // params['bands']
-    band_wise_rdd = signature \
-        .map(
-            lambda business_set: (
-                business_set[0],
-                list(map(
-                    lambda chunk_num: tuple(business_set[1][chunk_num * r: chunk_num * r + r]),
-                    range(params['bands'])
-                ))
-            )
-        )
+    band_wise_rdd = get_band_wise_rdd(signature)
 
     # find candidate pairs
-    candidate_rdd = band_wise_rdd \
-        .cartesian(band_wise_rdd) \
-        .filter(lambda pair: pair[0][0] < pair[1][0]) \
-        .filter(lambda pair: any([hash(tup1) == hash(tup2) for tup1, tup2 in zip(pair[0][1], pair[1][1])])) \
-        .map(lambda pair: (pair[0][0], pair[1][0])) \
-        .collect()
-    print(candidate_rdd)
+    candidate_rdd = get_candidate_rdd(band_wise_rdd)
+    print(candidate_rdd.collect())
 
 
 if __name__ == '__main__':
