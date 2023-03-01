@@ -45,8 +45,8 @@ def parse_dataset():
         .map(lambda business_set: (business_set[0], set(business_set[1])))
 
 
-def get_mappings(dataset_rdd):
-    business_ids = dataset_rdd.map(lambda business_set: business_set[0]).collect()
+def get_element_mapping(dataset_rdd):
+    # business_ids = dataset_rdd.map(lambda business_set: business_set[0]).collect()
     user_ids = list(chain.from_iterable(dataset_rdd.map(lambda business_set: business_set[1]).collect()))
 
     def map_by_counter(ids, _map, counter):
@@ -56,7 +56,7 @@ def get_mappings(dataset_rdd):
                 counter += 1
         return _map
 
-    return map_by_counter(business_ids, dict(), 0), map_by_counter(user_ids, dict(), 0)
+    return map_by_counter(user_ids, dict(), 0)  # , map_by_counter(business_ids, dict(), 0)
 
 
 def construct_hashers(num_rows):
@@ -94,14 +94,14 @@ def get_band_wise_rdd(signature):
     r = params['n_hashers'] // params['bands']
     return signature \
         .map(
-            lambda business_set: (
-                business_set[0],
-                list(map(
-                    lambda chunk_num: tuple(business_set[1][chunk_num * r: chunk_num * r + r]),
-                    range(params['bands'])
-                ))
-            )
+        lambda business_set: (
+            business_set[0],
+            list(map(
+                lambda chunk_num: tuple(business_set[1][chunk_num * r: chunk_num * r + r]),
+                range(params['bands'])
+            ))
         )
+    )
 
 
 def get_candidate_rdd(band_wise_rdd):
@@ -143,7 +143,7 @@ def main():
     dataset_rdd = parse_dataset()
 
     # get element (row / users) and set (cols / businesses) mappings
-    set_map, element_map = get_mappings(dataset_rdd)
+    element_map = get_element_mapping(dataset_rdd)
 
     # define a collection of hash functions
     hashers = construct_hashers(len(element_map))
