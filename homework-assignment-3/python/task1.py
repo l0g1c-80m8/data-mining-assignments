@@ -112,7 +112,7 @@ def get_candidate_rdd(band_wise_rdd):
     return band_wise_rdd \
         .cartesian(band_wise_rdd) \
         .filter(lambda pair: pair[0][0] < pair[1][0]) \
-        .filter(lambda pair: any([hash(tup1) == hash(tup2) for tup1, tup2 in zip(pair[0][1], pair[1][1])])) \
+        .filter(lambda pair: any([tup1 == tup2 for tup1, tup2 in zip(pair[0][1], pair[1][1])])) \
         .map(lambda pair: (pair[0][0], pair[1][0])) \
         .sortBy(lambda pair: str(pair))
 
