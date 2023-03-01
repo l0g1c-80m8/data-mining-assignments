@@ -101,7 +101,20 @@ def main():
 
     # construct a column-wise signature matrix
     signature = get_signature(dataset_rdd, hashers, element_map)
-    print(signature.collect())
+
+    # chunk each column into bands
+    r = params['n_hashers'] // params['bands']
+    band_wise_rdd = signature \
+        .map(
+            lambda business_set: (
+                business_set[0],
+                list(map(
+                    lambda chunk_num: business_set[1][chunk_num * r: chunk_num * r + r],
+                    range(params['bands'])
+                ))
+            )
+        )
+    print(band_wise_rdd.collect())
 
 
 if __name__ == '__main__':
