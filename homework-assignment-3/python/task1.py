@@ -142,6 +142,14 @@ def get_similar_pairs(candidate_rdd, dataset_rdd):
     )
 
 
+def write_results_to_file(similar_pairs):
+    file_header = 'business_id_1,business_id_2,similarity\n'
+    with open(params['out_file'], 'w') as fh:
+        fh.write(file_header)
+        for pair in similar_pairs:
+            fh.write('{},{},{}\n'.format(pair[0], pair[1], pair[2]))
+
+
 def main():
     # dataset rdd
     dataset_rdd = parse_dataset()
@@ -163,7 +171,7 @@ def main():
 
     # get actual similar pairs from candidate pairs
     similar_pairs = get_similar_pairs(candidate_rdd, dataset_rdd)
-    print(similar_pairs)
+    write_results_to_file(similar_pairs)
 
 
 if __name__ == '__main__':
