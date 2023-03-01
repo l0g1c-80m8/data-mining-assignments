@@ -114,7 +114,14 @@ def main():
                 ))
             )
         )
-    print(band_wise_rdd.collect())
+
+    # find candidate pairs
+    candidate_rdd = band_wise_rdd \
+        .cartesian(band_wise_rdd) \
+        .filter(lambda pair: (pair[0][0] < pair[1][0])) \
+        .filter(lambda pair: any([hash(tup1) == hash(tup2) for tup1, tup2 in zip(pair[0][1], pair[1][1])])) \
+        .collect()
+    print(candidate_rdd)
 
 
 if __name__ == '__main__':
