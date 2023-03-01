@@ -27,7 +27,7 @@ def parse_args():
     run_time_params['app_name'] = 'hw3-task1'
     run_time_params['in_file'] = sys.argv[1]
     run_time_params['out_file'] = sys.argv[2]
-    run_time_params['bands'] = 1
+    run_time_params['bands'] = 2
     run_time_params['n_hashers'] = 2
     return run_time_params
 
@@ -66,10 +66,10 @@ def construct_hashers(num_rows):
     ]
 
     # https://stackoverflow.com/a/25104050/16112875
-    return [
-        lambda x: (hash_params.a * x + hash_params.b) % hash_params.m
-        for hash_params in hasher_params_list
-    ]
+    return list(map(
+        lambda hash_params: lambda x: (hash_params.a * x + hash_params.b) % hash_params.m,
+        hasher_params_list
+    ))
 
 
 def get_signature(dataset_rdd, hashers, element_map):
