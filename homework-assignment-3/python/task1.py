@@ -28,8 +28,8 @@ def parse_args():
     run_time_params['app_name'] = 'hw3-task1'
     run_time_params['in_file'] = sys.argv[1]
     run_time_params['out_file'] = sys.argv[2]
-    run_time_params['bands'] = 30
-    run_time_params['n_hashers'] = 30
+    run_time_params['bands'] = 15
+    run_time_params['n_hashers'] = 50
     run_time_params['jaccard_threshold'] = 0.5
     run_time_params['prime_modulus'] = 4213398913  # randomly generated prime in range 1 billion to 10 billion
     return run_time_params
@@ -122,10 +122,7 @@ def get_jaccard_similarity(user_set_1, user_set_2):
     return len(user_set_1.intersection(user_set_2)) / len(user_set_1.union(user_set_2))
 
 
-def get_similar_pairs(candidate_rdd, dataset_rdd):
-    dataset_map = dataset_rdd.collectAsMap()
-    candidate_pairs = sorted(set(candidate_rdd.collect()))
-
+def get_similar_pairs(candidate_pairs, dataset_map):
     return list(
         filter(
             lambda res_pair: res_pair[2] >= params['jaccard_threshold'],
@@ -168,10 +165,10 @@ def main():
     band_wise_rdd = get_band_wise_rdd(signature)
 
     # find candidate pairs
-    candidate_rdd = get_candidate_rdd(band_wise_rdd)
+    candidate_pairs = sorted(set(get_candidate_rdd(band_wise_rdd).collect()))
 
     # get actual similar pairs from candidate pairs
-    similar_pairs = get_similar_pairs(candidate_rdd, dataset_rdd)
+    similar_pairs = get_similar_pairs(candidate_pairs, dataset_rdd.collectAsMap())
     write_results_to_file(similar_pairs)
 
 
