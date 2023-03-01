@@ -145,27 +145,21 @@ def get_similar_pairs(candidate_rdd, dataset_rdd):
 def main():
     # dataset rdd
     dataset_rdd = parse_dataset()
-    print('data set parsed')
 
     # get element (row / users) and set (cols / businesses) mappings
     element_map = get_element_mapping(dataset_rdd)
-    print('element map constructed')
 
     # define a collection of hash functions
     hashers = construct_hashers(len(element_map))
-    print('hashers created')
 
     # construct a column-wise signature matrix
     signature = get_signature(dataset_rdd, hashers, element_map)
-    print('signature matrix constructed')
 
     # chunk each column into bands
     band_wise_rdd = get_band_wise_rdd(signature)
-    print('bands constructed')
 
     # find candidate pairs
     candidate_rdd = get_candidate_rdd(band_wise_rdd)
-    print('candidates generated')
 
     # get actual similar pairs from candidate pairs
     similar_pairs = get_similar_pairs(candidate_rdd, dataset_rdd)
