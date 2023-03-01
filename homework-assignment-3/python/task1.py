@@ -29,6 +29,7 @@ def parse_args():
     run_time_params['out_file'] = sys.argv[2]
     run_time_params['bands'] = 2
     run_time_params['n_hashers'] = 2
+    run_time_params['jaccard_threshold'] = 0.5
     return run_time_params
 
 
@@ -108,7 +109,33 @@ def get_candidate_rdd(band_wise_rdd):
         .cartesian(band_wise_rdd) \
         .filter(lambda pair: pair[0][0] < pair[1][0]) \
         .filter(lambda pair: any([hash(tup1) == hash(tup2) for tup1, tup2 in zip(pair[0][1], pair[1][1])])) \
-        .map(lambda pair: (pair[0][0], pair[1][0]))
+        .map(lambda pair: (pair[0][0], pair[1][0])) \
+        .sortBy(lambda pair: str(pair))
+
+
+def get_jaccard_similarity(user_set_1, user_set_2):
+    return len(user_set_1.intersection(user_set_2)) / len(user_set_1.union(user_set_2))
+
+
+def get_similar_pairs(candidate_rdd, dataset_rdd):
+    dataset_map = dataset_rdd.collectAsMap()
+    candidate_pairs = candidate_rdd.collect()
+
+    return list(
+        filter(
+            lambda res_pair: res_pair[2] >= params['jaccard_threshold'],
+            map(
+                lambda pair: (
+                    pair[0],
+                    pair[1],
+                    get_jaccard_similarity(
+                    dataset_map[pair[0]],
+                    dataset_map[pair[1]]
+                )),
+                candidate_pairs
+            )
+        )
+    )
 
 
 def main():
@@ -129,7 +156,10 @@ def main():
 
     # find candidate pairs
     candidate_rdd = get_candidate_rdd(band_wise_rdd)
-    print(candidate_rdd.collect())
+
+    # get actual similar pairs from candidate pairs
+    similar_pairs = get_similar_pairs(candidate_rdd, dataset_rdd)
+    print(similar_pairs)
 
 
 if __name__ == '__main__':
