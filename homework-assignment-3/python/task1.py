@@ -28,7 +28,7 @@ def parse_args():
     run_time_params['app_name'] = 'hw3-task1'
     run_time_params['in_file'] = sys.argv[1]
     run_time_params['out_file'] = sys.argv[2]
-    run_time_params['bands'] = 15
+    run_time_params['bands'] = 25
     run_time_params['n_hashers'] = 50
     run_time_params['jaccard_threshold'] = 0.5
     run_time_params['prime_modulus'] = 4213398913  # randomly generated prime in range 1 billion to 10 billion
@@ -141,7 +141,7 @@ def get_similar_pairs(candidate_pairs, dataset_map):
 
 
 def write_results_to_file(similar_pairs):
-    file_header = 'business_id_1,business_id_2,similarity\n'
+    file_header = 'business_id_1, business_id_2, similarity\n'
     with open(params['out_file'], 'w') as fh:
         fh.write(file_header)
         for pair in similar_pairs:
