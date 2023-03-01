@@ -98,14 +98,14 @@ def get_band_wise_rdd(signature):
     r = params['n_hashers'] // params['bands']
     return signature \
         .map(
-        lambda business_set: (
-            business_set[0],
-            list(map(
-                lambda chunk_num: tuple(business_set[1][chunk_num * r: chunk_num * r + r]),
-                range(params['bands'])
-            ))
+            lambda business_set: (
+                business_set[0],
+                list(map(
+                    lambda chunk_num: tuple(business_set[1][chunk_num * r: chunk_num * r + r]),
+                    range(params['bands'])
+                ))
+            )
         )
-    )
 
 
 def get_candidate_rdd(band_wise_rdd):
