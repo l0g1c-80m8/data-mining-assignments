@@ -12,7 +12,7 @@ import sys
 
 from collections import namedtuple
 from datetime import datetime
-from itertools import chain
+from itertools import chain, combinations
 from pyspark import SparkConf, SparkContext
 from random import randint
 
@@ -28,10 +28,10 @@ def parse_args():
     run_time_params['app_name'] = 'hw3-task1'
     run_time_params['in_file'] = sys.argv[1]
     run_time_params['out_file'] = sys.argv[2]
-    run_time_params['bands'] = 10
-    run_time_params['n_hashers'] = 50
+    run_time_params['bands'] = 30
+    run_time_params['n_hashers'] = 30
     run_time_params['jaccard_threshold'] = 0.5
-    run_time_params['prime_modulus'] = 692804188003  # randomly generated prime in range 1 billion to 10 billion
+    run_time_params['prime_modulus'] = 4213398913  # randomly generated prime in range 1 billion to 10 billion
     return run_time_params
 
 
@@ -110,11 +110,12 @@ def get_band_wise_rdd(signature):
 
 def get_candidate_rdd(band_wise_rdd):
     return band_wise_rdd \
-        .cartesian(band_wise_rdd) \
-        .filter(lambda pair: pair[0][0] < pair[1][0]) \
-        .filter(lambda pair: any([tup1 == tup2 for tup1, tup2 in zip(pair[0][1], pair[1][1])])) \
-        .map(lambda pair: (pair[0][0], pair[1][0])) \
-        .sortBy(lambda pair: str(pair))
+        .flatMapValues(lambda _set: [(band_num, band) for band_num, band in enumerate(_set)]) \
+        .map(lambda business_band: (business_band[1], business_band[0])) \
+        .groupByKey() \
+        .map(lambda chunk_wise_candidates: chunk_wise_candidates[1]) \
+        .filter(lambda candidate_list: len(candidate_list) > 1) \
+        .flatMap(lambda candidate_list: [tuple(sorted(pair)) for pair in combinations(candidate_list, 2)])
 
 
 def get_jaccard_similarity(user_set_1, user_set_2):
@@ -123,7 +124,7 @@ def get_jaccard_similarity(user_set_1, user_set_2):
 
 def get_similar_pairs(candidate_rdd, dataset_rdd):
     dataset_map = dataset_rdd.collectAsMap()
-    candidate_pairs = candidate_rdd.collect()
+    candidate_pairs = sorted(set(candidate_rdd.collect()))
 
     return list(
         filter(
