@@ -14,6 +14,7 @@ from collections import namedtuple
 from datetime import datetime
 from itertools import chain
 from pyspark import SparkConf, SparkContext
+from random import randint
 
 
 def parse_args():
@@ -27,9 +28,10 @@ def parse_args():
     run_time_params['app_name'] = 'hw3-task1'
     run_time_params['in_file'] = sys.argv[1]
     run_time_params['out_file'] = sys.argv[2]
-    run_time_params['bands'] = 2
-    run_time_params['n_hashers'] = 2
+    run_time_params['bands'] = 10
+    run_time_params['n_hashers'] = 50
     run_time_params['jaccard_threshold'] = 0.5
+    run_time_params['prime_modulus'] = 692804188003  # randomly generated prime in range 1 billion to 10 billion
     return run_time_params
 
 
@@ -62,13 +64,15 @@ def get_element_mapping(dataset_rdd):
 def construct_hashers(num_rows):
     HasherParams = namedtuple('HasherParams', ['a', 'b', 'm'])
     hasher_params_list = [
-        HasherParams(a=1, b=1, m=num_rows),
-        HasherParams(a=3, b=1, m=num_rows)
+        HasherParams(a=randint(1, sys.maxsize), b=randint(0, sys.maxsize), m=num_rows)
+        for _ in range(params['n_hashers'])
     ]
 
     # https://stackoverflow.com/a/25104050/16112875
     return list(map(
-        lambda hash_params: lambda x: (hash_params.a * x + hash_params.b) % hash_params.m,
+        lambda hash_params:
+        lambda x:
+        ((hash_params.a * x + hash_params.b) % params['prime_modulus']) % hash_params.m,
         hasher_params_list
     ))
 
@@ -141,21 +145,27 @@ def get_similar_pairs(candidate_rdd, dataset_rdd):
 def main():
     # dataset rdd
     dataset_rdd = parse_dataset()
+    print('data set parsed')
 
     # get element (row / users) and set (cols / businesses) mappings
     element_map = get_element_mapping(dataset_rdd)
+    print('element map constructed')
 
     # define a collection of hash functions
     hashers = construct_hashers(len(element_map))
+    print('hashers created')
 
     # construct a column-wise signature matrix
     signature = get_signature(dataset_rdd, hashers, element_map)
+    print('signature matrix constructed')
 
     # chunk each column into bands
     band_wise_rdd = get_band_wise_rdd(signature)
+    print('bands constructed')
 
     # find candidate pairs
     candidate_rdd = get_candidate_rdd(band_wise_rdd)
+    print('candidates generated')
 
     # get actual similar pairs from candidate pairs
     similar_pairs = get_similar_pairs(candidate_rdd, dataset_rdd)
