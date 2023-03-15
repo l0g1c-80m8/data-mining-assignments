@@ -10,3 +10,6 @@
 # ignore scala project files
 **/**/project/target/
 **/**/target/
+
+# ignore local interpreter
+venv/
