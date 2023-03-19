@@ -49,6 +49,9 @@ def main():
             lambda entry: (entry[0], 3.0),
             record[1]
         ))))
+    # TODO: Find pearson coefficient for all pair of items
+    # TODO: Map over all from test data, consider a neighbourhood of a certain size and calculate the predicted rating
+    # TODO: Find the RMSE between predicted ratings and ground-truth ratings
     print(test_rdd.take(2))
 
 
