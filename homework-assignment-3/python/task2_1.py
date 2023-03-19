@@ -27,8 +27,8 @@ def parse_args():
     return run_time_params
 
 
-def parse_dataset():
-    with open(params['in_file'], 'r') as fh:
+def parse_dataset(filename):
+    with open(filename, 'r') as fh:
         header = fh.readline().strip()
 
     return sc.textFile(params['in_file']) \
@@ -41,8 +41,15 @@ def parse_dataset():
 
 def main():
     # dataset rdd
-    dataset_rdd = parse_dataset()
-    print(dataset_rdd.take(2))
+    dataset_rdd = parse_dataset(params['in_file'])
+    # test rdd
+    test_rdd_ground = parse_dataset(params['test_file'])
+    test_rdd = test_rdd_ground \
+        .map(lambda record: (record[0], set(map(
+            lambda entry: (entry[0], 3.0),
+            record[1]
+        ))))
+    print(test_rdd.take(2))
 
 
 if __name__ == '__main__':
