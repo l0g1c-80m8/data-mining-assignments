@@ -49,10 +49,18 @@ def main():
             lambda entry: (entry[0], 3.0),
             record[1]
         ))))
+
+    # business-pair rdd
+    businesses_rdd = dataset_rdd.map(lambda record: record[0])
+    business_pair_rdd = businesses_rdd \
+        .cartesian(businesses_rdd) \
+        .filter(lambda business_pair: business_pair[0] != business_pair[1])
+
     # TODO: Find pearson coefficient for all pair of items
     # TODO: Map over all from test data, consider a neighbourhood of a certain size and calculate the predicted rating
     # TODO: Find the RMSE between predicted ratings and ground-truth ratings
-    print(test_rdd.take(2))
+
+    print(business_pair_rdd.collect())
 
 
 if __name__ == '__main__':
