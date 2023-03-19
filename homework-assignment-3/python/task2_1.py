@@ -27,8 +27,22 @@ def parse_args():
     return run_time_params
 
 
+def parse_dataset():
+    with open(params['in_file'], 'r') as fh:
+        header = fh.readline().strip()
+
+    return sc.textFile(params['in_file']) \
+        .filter(lambda line: line.strip() != header) \
+        .map(lambda line: line.split(',')) \
+        .map(lambda record: (record[1], record[0])) \
+        .groupByKey() \
+        .map(lambda business_set: (business_set[0], set(business_set[1])))
+
+
 def main():
-    pass
+    # dataset rdd
+    dataset_rdd = parse_dataset()
+    print(dataset_rdd.take(2))
 
 
 if __name__ == '__main__':
