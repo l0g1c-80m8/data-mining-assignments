@@ -31,7 +31,7 @@ def parse_dataset(filename):
     with open(filename, 'r') as fh:
         header = fh.readline().strip()
 
-    return sc.textFile(params['in_file']) \
+    return sc.textFile(filename) \
         .filter(lambda line: line.strip() != header) \
         .map(lambda line: line.split(',')) \
         .map(lambda record: (record[1], (record[0], record[2]))) \
@@ -49,7 +49,7 @@ def main():
             lambda entry: (entry[0], 3.0),
             record[1]
         ))))
-    print(test_rdd.take(2))
+    print(test_rdd.collect())
 
 
 if __name__ == '__main__':
