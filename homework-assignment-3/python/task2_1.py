@@ -9,6 +9,8 @@ import os
 import sys
 
 from datetime import datetime
+from functools import reduce
+from math import sqrt
 from pyspark import SparkConf, SparkContext
 
 
@@ -39,16 +41,72 @@ def parse_dataset(filename):
         .map(lambda business_set: (business_set[0], set(business_set[1])))
 
 
+def pearson_similarity(entry1, entry2):
+    if entry1[0] == entry2[0]:
+        return -100
+    users1 = dict(entry1[1])
+    users2 = dict(entry2[1])
+
+    def _get_co_rated_avg(users):
+        return reduce(
+            lambda val, ele: float(val) + float(ele),
+            map(
+                lambda entry: entry[1],
+                filter(lambda user: user[0] in co_rated_users, users.items())
+            ),
+            0
+        ) / len(co_rated_users)
+
+    co_rated_users = set(users1.keys()).intersection(users2.keys())
+    users1_avg = _get_co_rated_avg(users1)
+    users2_avg = _get_co_rated_avg(users2)
+
+    numerator = reduce(
+        lambda value, user_id: value + (float(users1[user_id]) - users1_avg) * (float(users2[user_id]) - users2_avg),
+        co_rated_users,
+        0.0
+    )
+
+    if numerator == 0:
+        return 0.0
+
+    denominator = sqrt(reduce(
+        lambda value, user_id: value + pow((float(users1[user_id]) - users1_avg), 2),
+        co_rated_users,
+        0.0
+    )) * sqrt(reduce(
+        lambda value, user_id: value + pow((float(users2[user_id]) - users2_avg), 2),
+        co_rated_users,
+        0.0
+    ))
+
+    return numerator / denominator
+
+
+def recommend(pair, dataset):
+    business_id = pair[0]
+    user_id = pair[1][0]
+
+    business_ratings = dataset[business_id]
+
+    similarities = list(map(
+        lambda entry: pearson_similarity(entry, (business_id, business_ratings)),
+        dataset.items()
+    ))
+    print(similarities)
+
+    return None
+
+
 def main():
     # dataset rdd
     dataset_rdd = parse_dataset(params['in_file'])
+    dataset = dataset_rdd.collectAsMap()
     # test rdd
-    test_rdd_ground = parse_dataset(params['test_file'])
-    test_rdd = test_rdd_ground \
-        .map(lambda record: (record[0], set(map(
-            lambda entry: (entry[0], 3.0),
-            record[1]
-        ))))
+    test_rdd = parse_dataset(params['test_file']) \
+        .flatMapValues(lambda val: val)
+
+    test_rdd = test_rdd.map(lambda pair: recommend(pair, dataset))
     print(test_rdd.collect())
 
 
