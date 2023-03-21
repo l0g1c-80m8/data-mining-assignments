@@ -73,6 +73,9 @@ if __name__ == '__main__':
     test_rdd = parse_dataset(params['test_file'])
     business_user_ground_map = test_rdd.collectAsMap()
 
+    # test pairs rdd
+    pairs_to_predict_rdd = test_rdd.flatMapValues(lambda val: val)
+
     # write_results_to_file(test_rdd.collect())
     # -------------------- END -------------------- #
     end_ts = datetime.now()
