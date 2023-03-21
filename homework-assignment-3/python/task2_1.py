@@ -44,9 +44,12 @@ def parse_dataset(filename):
 
 def pearson_similarity(entry1, entry2):
     if entry1[0] == entry2[0]:
-        return entry1[0], 0.0
+        return None
     users1 = dict(entry1[1])
     users2 = dict(entry2[1])
+
+    if entry2[2] not in users1:
+        return None
 
     def _get_co_rated_avg(users):
         return reduce(
@@ -59,6 +62,10 @@ def pearson_similarity(entry1, entry2):
         ) / len(co_rated_users)
 
     co_rated_users = set(users1.keys()).intersection(users2.keys())
+
+    if len(co_rated_users) < params['top_candidates']:
+        return entry1[0], 0.0
+
     users1_avg = _get_co_rated_avg(users1)
     users2_avg = _get_co_rated_avg(users2)
 
@@ -92,25 +99,36 @@ def recommend(pair, dataset):
         return business_id, user_id, 0.0
     business_ratings = dataset[business_id]
 
-    similar_businesses = sorted(map(
-        lambda entry: pearson_similarity(entry, (business_id, business_ratings)),
-        dataset.items()
+    similar_businesses = sorted(filter(
+        lambda entry: entry is not None,
+        map(
+            lambda entry: pearson_similarity(entry, (business_id, business_ratings, user_id)),
+            dataset.items()
+        )
     ),
         key=lambda business_similarity: business_similarity[1],
         reverse=True
     )[0:params['top_candidates']]
 
-    prediction = reduce(
+    numerator = reduce(
         lambda value, business_similarity: value + float(dataset[business_similarity[0]][user_id]) * business_similarity[1],
         similar_businesses,
         0.0
-    ) / reduce(
+    )
+
+    if numerator == 0.0:
+        return business_id, user_id, numerator
+
+    denominator = reduce(
         lambda value, business_similarity: value + business_similarity[1],
         similar_businesses,
         0.0
     )
 
-    return business_id, user_id, prediction
+    if denominator == 0.0:
+        return business_id, user_id, 0.0
+
+    return business_id, user_id, numerator / denominator
 
 
 def main():
