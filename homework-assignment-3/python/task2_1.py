@@ -26,7 +26,7 @@ def parse_args():
     run_time_params['in_file'] = sys.argv[1]
     run_time_params['test_file'] = sys.argv[2]
     run_time_params['out_file'] = sys.argv[3]
-    run_time_params['top_candidates'] = 2
+    run_time_params['top_candidates'] = 15
     return run_time_params
 
 
@@ -44,7 +44,7 @@ def parse_dataset(filename):
 
 def pearson_similarity(entry1, entry2):
     if entry1[0] == entry2[0]:
-        return entry1[0], -100
+        return entry1[0], 0.0
     users1 = dict(entry1[1])
     users2 = dict(entry2[1])
 
@@ -86,8 +86,10 @@ def pearson_similarity(entry1, entry2):
 
 def recommend(pair, dataset):
     business_id = pair[0]
-    user_id = pair[1][0]
+    user_id = pair[1]
 
+    if business_id not in dataset:
+        return business_id, user_id, 0.0
     business_ratings = dataset[business_id]
 
     similar_businesses = sorted(map(
