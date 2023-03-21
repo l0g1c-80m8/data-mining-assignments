@@ -111,7 +111,8 @@ def recommend(pair, dataset):
     )[0:params['top_candidates']]
 
     numerator = reduce(
-        lambda value, business_similarity: value + float(dataset[business_similarity[0]][user_id]) * business_similarity[1],
+        lambda value, business_similarity: value + float(dataset[business_similarity[0]][user_id]) *
+                                           business_similarity[1],
         similar_businesses,
         0.0
     )
@@ -131,6 +132,14 @@ def recommend(pair, dataset):
     return business_id, user_id, numerator / denominator
 
 
+def write_results_to_file(recommendations):
+    file_header = 'user_id, business_id, prediction\n'
+    with open(params['out_file'], 'w') as fh:
+        fh.write(file_header)
+        for triple in recommendations:
+            fh.write('{},{},{}\n'.format(triple[1], triple[0], triple[2]))
+
+
 def main():
     # dataset rdd
     dataset_rdd = parse_dataset(params['in_file'])
@@ -140,7 +149,8 @@ def main():
         .flatMapValues(lambda val: val)
 
     test_rdd = test_rdd.map(lambda pair: recommend(pair, dataset))
-    print(test_rdd.collect())
+
+    write_results_to_file(test_rdd.collect())
 
 
 if __name__ == '__main__':
