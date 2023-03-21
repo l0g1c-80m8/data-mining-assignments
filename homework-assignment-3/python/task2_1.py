@@ -155,7 +155,7 @@ if __name__ == '__main__':
     sc = SparkContext(conf=SparkConf().setAppName(params['app_name']).setMaster("local[*]"))
     sc.setLogLevel('ERROR')
 
-    # run min-hashing + locality sensitive hashing
+    # run prediction
     start_ts = datetime.now()
     main()
     end_ts = datetime.now()
