@@ -42,96 +42,6 @@ def parse_dataset(filename):
         .map(lambda business_set: (business_set[0], dict(business_set[1])))
 
 
-def pearson_similarity(entry1, entry2):
-    if entry1[0] == entry2[0]:
-        return None
-    users1 = dict(entry1[1])
-    users2 = dict(entry2[1])
-
-    if entry2[2] not in users1:
-        return None
-
-    def _get_co_rated_avg(users):
-        return reduce(
-            lambda val, ele: float(val) + float(ele),
-            map(
-                lambda entry: entry[1],
-                filter(lambda user: user[0] in co_rated_users, users.items())
-            ),
-            0
-        ) / len(co_rated_users)
-
-    co_rated_users = set(users1.keys()).intersection(users2.keys())
-
-    if len(co_rated_users) < params['top_candidates']:
-        return entry1[0], 0.0
-
-    users1_avg = _get_co_rated_avg(users1)
-    users2_avg = _get_co_rated_avg(users2)
-
-    numerator = reduce(
-        lambda value, user_id: value + (float(users1[user_id]) - users1_avg) * (float(users2[user_id]) - users2_avg),
-        co_rated_users,
-        0.0
-    )
-
-    if numerator == 0:
-        return entry1[0], 0.0
-
-    denominator = sqrt(reduce(
-        lambda value, user_id: value + pow((float(users1[user_id]) - users1_avg), 2),
-        co_rated_users,
-        0.0
-    )) * sqrt(reduce(
-        lambda value, user_id: value + pow((float(users2[user_id]) - users2_avg), 2),
-        co_rated_users,
-        0.0
-    ))
-
-    return entry1[0], numerator / denominator
-
-
-def recommend(pair, dataset):
-    business_id = pair[0]
-    user_id = pair[1]
-
-    if business_id not in dataset:
-        return business_id, user_id, 0.0
-    business_ratings = dataset[business_id]
-
-    similar_businesses = sorted(filter(
-        lambda entry: entry is not None,
-        map(
-            lambda entry: pearson_similarity(entry, (business_id, business_ratings, user_id)),
-            dataset.items()
-        )
-    ),
-        key=lambda business_similarity: business_similarity[1],
-        reverse=True
-    )[0:params['top_candidates']]
-
-    numerator = reduce(
-        lambda value, business_similarity: value + float(dataset[business_similarity[0]][user_id]) *
-                                           business_similarity[1],
-        similar_businesses,
-        0.0
-    )
-
-    if numerator == 0.0:
-        return business_id, user_id, numerator
-
-    denominator = reduce(
-        lambda value, business_similarity: value + business_similarity[1],
-        similar_businesses,
-        0.0
-    )
-
-    if denominator == 0.0:
-        return business_id, user_id, 0.0
-
-    return business_id, user_id, numerator / denominator
-
-
 def write_results_to_file(recommendations):
     file_header = 'user_id, business_id, prediction\n'
     with open(params['out_file'], 'w') as fh:
@@ -147,8 +57,6 @@ def main():
     # test rdd
     test_rdd = parse_dataset(params['test_file']) \
         .flatMapValues(lambda val: val)
-
-    test_rdd = test_rdd.map(lambda pair: recommend(pair, dataset))
 
     write_results_to_file(test_rdd.collect())
 
