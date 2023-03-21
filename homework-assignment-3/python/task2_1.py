@@ -66,13 +66,14 @@ if __name__ == '__main__':
     start_ts = datetime.now()
     # -------------------- START -------------------- #
     # dataset rdd
-    dataset_rdd = parse_dataset(params['in_file'])
-    dataset = dataset_rdd.collectAsMap()
-    # test rdd
-    test_rdd = parse_dataset(params['test_file']) \
-        .flatMapValues(lambda val: val)
+    train_rdd = parse_dataset(params['in_file'])
+    business_user_rating_map = train_rdd.collectAsMap()
 
-    write_results_to_file(test_rdd.collect())
+    # test rdd
+    test_rdd = parse_dataset(params['test_file'])
+    business_user_ground_map = test_rdd.collectAsMap()
+
+    # write_results_to_file(test_rdd.collect())
     # -------------------- END -------------------- #
     end_ts = datetime.now()
     print('Duration: ', (end_ts - start_ts).total_seconds())
