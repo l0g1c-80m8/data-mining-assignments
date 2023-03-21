@@ -39,7 +39,7 @@ def parse_dataset(filename):
         .map(lambda line: line.split(',')) \
         .map(lambda record: (record[1], (record[0], record[2]))) \
         .groupByKey() \
-        .map(lambda business_set: (business_set[0], set(business_set[1])))
+        .map(lambda business_set: (business_set[0], dict(business_set[1])))
 
 
 def pearson_similarity(entry1, entry2):
@@ -90,16 +90,25 @@ def recommend(pair, dataset):
 
     business_ratings = dataset[business_id]
 
-    similar_items = sorted(map(
+    similar_businesses = sorted(map(
         lambda entry: pearson_similarity(entry, (business_id, business_ratings)),
         dataset.items()
     ),
-        key=lambda user_similarity: user_similarity[1],
+        key=lambda business_similarity: business_similarity[1],
         reverse=True
     )[0:params['top_candidates']]
-    print(similar_items)
 
-    return None
+    prediction = reduce(
+        lambda value, business_similarity: value + float(dataset[business_similarity[0]][user_id]) * business_similarity[1],
+        similar_businesses,
+        0.0
+    ) / reduce(
+        lambda value, business_similarity: value + business_similarity[1],
+        similar_businesses,
+        0.0
+    )
+
+    return business_id, user_id, prediction
 
 
 def main():
