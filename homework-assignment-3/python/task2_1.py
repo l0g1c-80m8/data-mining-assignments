@@ -50,17 +50,6 @@ def write_results_to_file(recommendations):
             fh.write('{},{},{}\n'.format(triple[1], triple[0], triple[2]))
 
 
-def main():
-    # dataset rdd
-    dataset_rdd = parse_dataset(params['in_file'])
-    dataset = dataset_rdd.collectAsMap()
-    # test rdd
-    test_rdd = parse_dataset(params['test_file']) \
-        .flatMapValues(lambda val: val)
-
-    write_results_to_file(test_rdd.collect())
-
-
 if __name__ == '__main__':
     # set executables
     os.environ['PYSPARK_PYTHON'] = sys.executable
@@ -75,7 +64,16 @@ if __name__ == '__main__':
 
     # run prediction
     start_ts = datetime.now()
-    main()
+    # -------------------- START -------------------- #
+    # dataset rdd
+    dataset_rdd = parse_dataset(params['in_file'])
+    dataset = dataset_rdd.collectAsMap()
+    # test rdd
+    test_rdd = parse_dataset(params['test_file']) \
+        .flatMapValues(lambda val: val)
+
+    write_results_to_file(test_rdd.collect())
+    # -------------------- END -------------------- #
     end_ts = datetime.now()
     print('Duration: ', (end_ts - start_ts).total_seconds())
 
