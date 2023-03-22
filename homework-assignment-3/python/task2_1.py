@@ -37,7 +37,7 @@ def parse_dataset(filename):
     return sc.textFile(filename) \
         .filter(lambda line: line.strip() != header) \
         .map(lambda line: line.split(',')) \
-        .map(lambda record: (record[1], (record[0], record[2]))) \
+        .map(lambda record: (record[1], (record[0], float(record[2])))) \
         .groupByKey() \
         .map(lambda business_set: (business_set[0], dict(business_set[1])))
 
