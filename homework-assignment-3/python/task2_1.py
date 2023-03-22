@@ -76,6 +76,7 @@ if __name__ == '__main__':
     # test pairs rdd
     pairs_to_predict_rdd = test_rdd.flatMapValues(lambda val: val)
 
+    # write output to the file
     # write_results_to_file(test_rdd.collect())
     # -------------------- END -------------------- #
     end_ts = datetime.now()
