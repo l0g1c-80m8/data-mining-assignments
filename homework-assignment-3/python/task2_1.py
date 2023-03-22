@@ -27,7 +27,8 @@ def parse_args():
     run_time_params['test_file'] = sys.argv[2]
     run_time_params['out_file'] = sys.argv[3]
     run_time_params['top_candidates'] = 3
-    run_time_params['min_candidates'] = 3
+    run_time_params['neighborhood_size'] = 10
+    run_time_params['min_ratings'] = 16
     return run_time_params
 
 
@@ -74,7 +75,7 @@ def pearson_similarity(entry1, entry2):
 
     co_rated_users = set(users1.keys()).intersection(users2.keys())
 
-    if len(co_rated_users) < params['min_candidates']:
+    if len(co_rated_users) < params['top_candidates']:
         return entry1[0], 0.0
 
     users1_avg = _get_co_rated_avg(users1)
@@ -111,7 +112,7 @@ def recommend(pair, dataset):
     business_ratings = dataset[business_id]
 
     similar_businesses = sorted(filter(
-        lambda entry: entry is not None,
+        lambda entry: entry is not None and entry[1] > 0.0,
         map(
             lambda entry: pearson_similarity(entry, (business_id, business_ratings, user_id)),
             dataset.items()
@@ -119,7 +120,7 @@ def recommend(pair, dataset):
     ),
         key=lambda business_similarity: business_similarity[1],
         reverse=True
-    )[0:params['top_candidates']]
+    )[0:params['neighborhood_size']]
 
     if len(similar_businesses) == 0:
         return business_id, user_id, 2.5
@@ -156,7 +157,9 @@ def write_results_to_file(recommendations):
 
 def main():
     # dataset rdd
-    dataset = parse_dataset().collectAsMap()
+    dataset = parse_dataset() \
+        .filter(lambda business_set: len(business_set[1]) > params['min_ratings']) \
+        .collectAsMap()
     # test rdd
     test_set = parse_test_set().collect()
 
