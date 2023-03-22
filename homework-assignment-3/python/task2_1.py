@@ -26,8 +26,8 @@ def parse_args():
     run_time_params['in_file'] = sys.argv[1]
     run_time_params['test_file'] = sys.argv[2]
     run_time_params['out_file'] = sys.argv[3]
-    run_time_params['top_candidates'] = 15
-    run_time_params['min_candidates'] = 15
+    run_time_params['top_candidates'] = 3
+    run_time_params['min_candidates'] = 3
     return run_time_params
 
 
@@ -107,7 +107,7 @@ def recommend(pair, dataset):
     user_id = pair[1]
 
     if business_id not in dataset:
-        return business_id, user_id, 0.0
+        return business_id, user_id, 2.5
     business_ratings = dataset[business_id]
 
     similar_businesses = sorted(filter(
@@ -120,6 +120,9 @@ def recommend(pair, dataset):
         key=lambda business_similarity: business_similarity[1],
         reverse=True
     )[0:params['top_candidates']]
+
+    if len(similar_businesses) == 0:
+        return business_id, user_id, 2.5
 
     numerator = reduce(
         lambda value, business_similarity: value + float(dataset[business_similarity[0]][user_id]) *
@@ -155,9 +158,9 @@ def main():
     # dataset rdd
     dataset = parse_dataset().collectAsMap()
     # test rdd
-    test_set = parse_test_set().collectAsMap()
+    test_set = parse_test_set().collect()
 
-    results_rdd = sc.parallelize(test_set.items()) \
+    results_rdd = sc.parallelize(test_set) \
         .map(lambda pair: recommend(pair, dataset))
 
     write_results_to_file(results_rdd.collect())
