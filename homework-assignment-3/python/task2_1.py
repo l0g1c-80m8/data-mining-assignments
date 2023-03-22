@@ -31,16 +31,26 @@ def parse_args():
     return run_time_params
 
 
-def parse_dataset(filename):
-    with open(filename, 'r') as fh:
+def parse_dataset():
+    with open(params['in_file'], 'r') as fh:
         header = fh.readline().strip()
 
-    return sc.textFile(filename) \
+    return sc.textFile(params['in_file']) \
         .filter(lambda line: line.strip() != header) \
         .map(lambda line: line.split(',')) \
         .map(lambda record: (record[1], (record[0], record[2]))) \
         .groupByKey() \
         .map(lambda business_set: (business_set[0], dict(business_set[1])))
+
+
+def parse_test_set():
+    with open(params['test_file'], 'r') as fh:
+        header = fh.readline().strip()
+
+    return sc.textFile(params['test_file']) \
+        .filter(lambda line: line.strip() != header) \
+        .map(lambda line: line.split(',')) \
+        .map(lambda record: (record[1], record[0]))
 
 
 def pearson_similarity(entry1, entry2):
@@ -143,13 +153,11 @@ def write_results_to_file(recommendations):
 
 def main():
     # dataset rdd
-    dataset_rdd = parse_dataset(params['in_file'])
-    dataset = dataset_rdd.collectAsMap()
+    dataset = parse_dataset().collectAsMap()
     # test rdd
-    test_rdd = parse_dataset(params['test_file']) \
-        .flatMapValues(lambda val: val)
+    test_set = parse_test_set().collectAsMap()
 
-    results_rdd = sc.parallelize(test_rdd.collectAsMap().items()) \
+    results_rdd = sc.parallelize(test_set.items()) \
         .map(lambda pair: recommend(pair, dataset))
 
     write_results_to_file(results_rdd.collect())
