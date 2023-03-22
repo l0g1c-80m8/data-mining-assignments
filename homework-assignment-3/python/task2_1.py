@@ -26,10 +26,26 @@ def parse_args():
     run_time_params['in_file'] = sys.argv[1]
     run_time_params['test_file'] = sys.argv[2]
     run_time_params['out_file'] = sys.argv[3]
-    run_time_params['top_candidates'] = 3
-    run_time_params['neighborhood_size'] = 10
-    run_time_params['min_ratings'] = 16
+    run_time_params['top_candidates'] = 20
+    run_time_params['neighborhood_size'] = 20
+    run_time_params['min_ratings'] = 20
     return run_time_params
+
+
+def dataset_average(mode):
+    with open(params['in_file'], 'r') as fh:
+        header = fh.readline().strip()
+
+    key_idx = 0 if mode == 'users' else 1
+
+    return sc.textFile(params['in_file']) \
+        .filter(lambda line: line.strip() != header) \
+        .map(lambda line: line.split(',')) \
+        .map(lambda record: (record[key_idx], float(record[2]))) \
+        .groupByKey() \
+        .map(lambda key_set: (key_set[0], list(key_set[1]))) \
+        .map(lambda key_set: (key_set[0], sum(key_set[1]) / len(key_set[1]))) \
+        .collectAsMap()
 
 
 def parse_dataset():
@@ -103,11 +119,13 @@ def pearson_similarity(entry1, entry2):
     return entry1[0], numerator / denominator
 
 
-def recommend(pair, dataset):
+def recommend(pair, dataset, avg_user_ratings, avg_business_ratings):
     business_id = pair[0]
     user_id = pair[1]
 
     if business_id not in dataset:
+        if business_id in avg_business_ratings:
+            return business_id, user_id, avg_business_ratings[business_id]
         return business_id, user_id, 2.5
     business_ratings = dataset[business_id]
 
@@ -122,9 +140,6 @@ def recommend(pair, dataset):
         reverse=True
     )[0:params['neighborhood_size']]
 
-    if len(similar_businesses) == 0:
-        return business_id, user_id, 2.5
-
     numerator = reduce(
         lambda value, business_similarity: value + float(dataset[business_similarity[0]][user_id]) *
                                            business_similarity[1],
@@ -133,7 +148,7 @@ def recommend(pair, dataset):
     )
 
     if numerator == 0.0:
-        return business_id, user_id, numerator
+        return business_id, user_id, avg_user_ratings[user_id]
 
     denominator = reduce(
         lambda value, business_similarity: value + business_similarity[1],
@@ -142,7 +157,7 @@ def recommend(pair, dataset):
     )
 
     if denominator == 0.0:
-        return business_id, user_id, 0.0
+        return business_id, user_id, avg_user_ratings[user_id]
 
     return business_id, user_id, numerator / denominator
 
@@ -157,14 +172,18 @@ def write_results_to_file(recommendations):
 
 def main():
     # dataset rdd
-    dataset = parse_dataset() \
-        .filter(lambda business_set: len(business_set[1]) > params['min_ratings']) \
+    dataset_rdd = parse_dataset()
+    dataset = dataset_rdd \
+        .filter(lambda business_set: len(business_set[1]) >= params['min_ratings']) \
         .collectAsMap()
+
+    avg_user_ratings, avg_business_ratings = dataset_average('users'), dataset_average('businesses')
+
     # test rdd
     test_set = parse_test_set().collect()
 
     results_rdd = sc.parallelize(test_set) \
-        .map(lambda pair: recommend(pair, dataset))
+        .map(lambda pair: recommend(pair, dataset, avg_user_ratings, avg_business_ratings))
 
     write_results_to_file(results_rdd.collect())
 
