@@ -149,9 +149,10 @@ def main():
     test_rdd = parse_dataset(params['test_file']) \
         .flatMapValues(lambda val: val)
 
-    test_rdd = test_rdd.map(lambda pair: recommend(pair, dataset))
+    results_rdd = sc.parallelize(test_rdd.collectAsMap().items()) \
+        .map(lambda pair: recommend(pair, dataset))
 
-    write_results_to_file(test_rdd.collect())
+    write_results_to_file(results_rdd.collect())
 
 
 if __name__ == '__main__':
