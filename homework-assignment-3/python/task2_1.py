@@ -26,7 +26,8 @@ def parse_args():
     run_time_params['in_file'] = sys.argv[1]
     run_time_params['test_file'] = sys.argv[2]
     run_time_params['out_file'] = sys.argv[3]
-    run_time_params['top_candidates'] = 15
+    run_time_params['top_candidates'] = 2
+    run_time_params['min_candidates'] = 2
     return run_time_params
 
 
@@ -63,7 +64,7 @@ def pearson_similarity(entry1, entry2):
 
     co_rated_users = set(users1.keys()).intersection(users2.keys())
 
-    if len(co_rated_users) < params['top_candidates']:
+    if len(co_rated_users) < params['min_candidates']:
         return entry1[0], 0.0
 
     users1_avg = _get_co_rated_avg(users1)
