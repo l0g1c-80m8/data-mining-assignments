@@ -68,15 +68,6 @@ def parse_business_set():
         .map(lambda business_obj: (business_obj['business_id'], (business_obj['stars'], business_obj['review_count'])))
 
 
-def write_results_to_file(data):
-    file_header = 'user_id, business_id, rating, review_count, useful, funny,' \
-                  ' cool, fans, average_stars, business_stars, business_review_count\n'
-    with open(params['out_file'], 'w') as fh:
-        fh.write(file_header)
-        for record in data:
-            fh.write('{}\n'.format(','.join(map(lambda item: str(item), list(record)))))
-
-
 def fill_features(record, user_data, business_data):
     user_features = user_data.get(record[0], (0, 0, 0, 0, 0, 0, 0))
     business_features = business_data.get(record[1], (0, 0))
