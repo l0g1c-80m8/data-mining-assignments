@@ -55,11 +55,12 @@ def parse_user_set():
 
     return sc.textFile(filename) \
         .map(lambda json_string: json.loads(json_string)) \
-        .map(lambda user_obj: (user_obj['user_id'], (user_obj['review_count'],
-                                                     user_obj['useful'], user_obj['funny'], user_obj['cool'],
-                                                     user_obj['fans'],
-                                                     user_obj['average_stars']
-                                                     ))
+        .map(lambda user_obj: (user_obj[params['record_cols'][0]],
+                               tuple(map(
+                                   lambda col_name: user_obj[col_name],
+                                   params['user_feature_cols']
+                               ))
+                               )
              )
 
 
@@ -68,7 +69,13 @@ def parse_business_set():
 
     return sc.textFile(filename) \
         .map(lambda json_string: json.loads(json_string)) \
-        .map(lambda business_obj: (business_obj['business_id'], (business_obj['stars'], business_obj['review_count'])))
+        .map(lambda business_obj: (business_obj[params['record_cols'][1]],
+                                   tuple(map(
+                                       lambda col_name: business_obj[col_name.replace('business_', '')],
+                                       params['business_feature_cols']
+                                   ))
+                                   )
+             )
 
 
 def fill_features(record, user_data, business_data):
