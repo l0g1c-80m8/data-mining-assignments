@@ -4,7 +4,6 @@ import os
 import sys
 import xgboost as xgb
 
-from collections import defaultdict
 from datetime import datetime
 from pyspark import SparkConf, SparkContext
 
@@ -36,6 +35,16 @@ def parse_train_set():
         .filter(lambda line: line.strip() != header) \
         .map(lambda line: line.split(',')) \
         .map(lambda record: (record[0], record[1], float(record[2])))
+
+
+def parse_test_set():
+    with open(params['test_file'], 'r') as fh:
+        header = fh.readline().strip()
+
+    return sc.textFile(params['test_file']) \
+        .filter(lambda line: line.strip() != header) \
+        .map(lambda line: line.split(',')) \
+        .map(lambda record: (record[0], record[1]))
 
 
 def parse_user_set():
@@ -82,16 +91,28 @@ def main():
         .map(lambda record: fill_features(record, user_data, business_data)) \
         .collect()
 
-    write_results_to_file(train_set)
-
     train_df = pd.DataFrame(train_set, columns=['user_id', 'business_id', 'rating', 'review_count', 'useful',
                                                 'funny', 'cool', 'fans', 'average_stars', 'business_stars',
                                                 'business_review_count'
                                                 ]
                             )
 
-    model = xgb.XGBRegressor(n_estimators=1000, colsample_bytree=0.9, learning_rate=0.01)
+    model = xgb.XGBRegressor(n_estimators=100, learning_rate=0.1, verbosity=0)
     model.fit(train_df.drop(['user_id', 'business_id', 'rating'], axis=1).values, train_df[['rating']].values)
+
+    test_set = parse_test_set() \
+        .map(lambda record: fill_features(record, user_data, business_data)) \
+        .collect()
+    test_df = pd.DataFrame(test_set, columns=['user_id', 'business_id', 'review_count', 'useful', 'funny', 'cool',
+                                              'fans', 'average_stars', 'business_stars', 'business_review_count'
+                                              ]
+                           )
+
+    predictions = model.predict(test_df.drop(['user_id', 'business_id'], axis=1).values)
+
+    results_df = test_df.copy(deep=True)
+    results_df['ratings'] = predictions
+    results_df[['user_id', 'business_id', 'ratings']].to_csv(params['out_file'], index=False)
 
 
 if __name__ == '__main__':
