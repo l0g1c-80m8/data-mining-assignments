@@ -23,6 +23,9 @@ def parse_args():
     run_time_params['train'] = 'yelp_train.csv'
     run_time_params['user'] = 'user.json'
     run_time_params['business'] = 'business.json'
+    run_time_params['record_cols'] = ['user_id', 'business_id', 'rating']
+    run_time_params['user_feature_cols'] = ['review_count', 'useful', 'funny', 'cool', 'fans', 'average_stars']
+    run_time_params['business_feature_cols'] = ['business_stars', 'business_review_count']
     return run_time_params
 
 
@@ -84,10 +87,7 @@ def main():
         parse_train_set()
         .map(lambda record: fill_features(record, user_data, business_data))
         .collect(),
-        columns=['user_id', 'business_id', 'rating', 'review_count', 'useful',
-                 'funny', 'cool', 'fans', 'average_stars', 'business_stars',
-                 'business_review_count'
-                 ]
+        columns=params['record_cols'] + params['user_feature_cols'] + params['business_feature_cols']
     )
 
     # create test dataset
@@ -95,22 +95,20 @@ def main():
         parse_test_set()
         .map(lambda record: fill_features(record, user_data, business_data))
         .collect(),
-        columns=['user_id', 'business_id', 'review_count', 'useful', 'funny', 'cool',
-                 'fans', 'average_stars', 'business_stars', 'business_review_count'
-                 ]
+        columns=params['record_cols'][: -1] + params['user_feature_cols'] + params['business_feature_cols']
     )
 
     # define the regressor model
     model = xgb.XGBRegressor(n_estimators=100, learning_rate=0.1, verbosity=0)
     # train the model
-    model.fit(train_df.drop(['user_id', 'business_id', 'rating'], axis=1).values, train_df[['rating']].values)
+    model.fit(train_df.drop(params['record_cols'], axis=1).values, train_df[params['record_cols'][-1:]].values)
     # generate predictions
-    predictions = model.predict(test_df.drop(['user_id', 'business_id'], axis=1).values)
+    predictions = model.predict(test_df.drop(params['record_cols'][: -1], axis=1).values)
 
     # format data and write to file
     results_df = test_df.copy(deep=True)
-    results_df['ratings'] = predictions
-    results_df[['user_id', 'business_id', 'ratings']].to_csv(params['out_file'], index=False)
+    results_df[params['record_cols'][-1]] = predictions
+    results_df[params['record_cols']].to_csv(params['out_file'], index=False)
 
 
 if __name__ == '__main__':
