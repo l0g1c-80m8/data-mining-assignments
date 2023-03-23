@@ -28,7 +28,7 @@ def parse_args():
     run_time_params['out_file'] = sys.argv[3]
     run_time_params['top_candidates'] = 20
     run_time_params['neighborhood_size'] = 20
-    run_time_params['min_ratings'] = 20
+    run_time_params['min_ratings'] = 100
     return run_time_params
 
 
