@@ -24,7 +24,9 @@ distribution = defaultdict(int)
 rmse = 0.0
 for key in results.keys():
     diff = abs(results[key] - validations[key])
-    if diff < 1:
+    if diff < 0:
+        distribution['<0'] += 1
+    elif diff < 1:
         distribution['<1'] += 1
     elif diff < 2:
         distribution['<2'] += 1
@@ -32,8 +34,10 @@ for key in results.keys():
         distribution['<3'] += 1
     elif diff < 4:
         distribution['<4'] += 1
+    elif diff <= 5:
+        distribution['<=5'] += 1
     else:
-        distribution['>=4'] += 1
+        distribution['>5'] += 1
 
     rmse += pow(diff, 2)
 
