@@ -162,7 +162,11 @@ def recommend(pair, dataset, avg_user_ratings, avg_business_ratings):
     if denominator == 0.0:
         return business_id, user_id, avg_user_ratings[user_id]
 
-    return business_id, user_id, numerator / denominator
+    predicted_rating = numerator / denominator
+    predicted_rating = max(0.0, predicted_rating)
+    predicted_rating = min(5.0, predicted_rating)
+
+    return business_id, user_id, predicted_rating
 
 
 def write_results_to_file(recommendations):
