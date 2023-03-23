@@ -83,7 +83,7 @@ def main():
 
     write_results_to_file(train_set)
 
-    train_df = df = pd.DataFrame(train_set, columns=['user_id', 'business_id', 'rating', 'review_count', 'useful',
+    train_df = pd.DataFrame(train_set, columns=['user_id', 'business_id', 'rating', 'review_count', 'useful',
                                                      'funny', 'cool', 'fans', 'average_stars', 'business_stars',
                                                      'business_review_count'
                                                      ]
