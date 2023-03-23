@@ -116,6 +116,9 @@ def pearson_similarity(entry1, entry2):
         0.0
     ))
 
+    if denominator == 0:
+        return entry1[0], 0.0
+
     return entry1[0], numerator / denominator
 
 
