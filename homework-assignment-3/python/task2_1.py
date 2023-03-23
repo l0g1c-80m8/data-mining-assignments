@@ -178,20 +178,19 @@ def write_results_to_file(recommendations):
 
 
 def main():
-    # dataset rdd
-    dataset_rdd = parse_dataset()
-    dataset = dataset_rdd \
+    # create the dataset with (not cold) business entries and their ratings
+    dataset = parse_dataset() \
         .filter(lambda business_set: len(business_set[1]) >= params['min_ratings']) \
         .collectAsMap()
 
+    # get averages for users and business to be used as fallbacks for cold businesses and missing/new businesses/users
     avg_user_ratings, avg_business_ratings = dataset_average('users'), dataset_average('businesses')
 
-    # test rdd
-    test_set = parse_test_set().collect()
-
-    results_rdd = sc.parallelize(test_set) \
+    # results rdd
+    results_rdd = sc.parallelize(parse_test_set().collect()) \
         .map(lambda pair: recommend(pair, dataset, avg_user_ratings, avg_business_ratings))
 
+    # write output to file
     write_results_to_file(results_rdd.collect())
 
 
