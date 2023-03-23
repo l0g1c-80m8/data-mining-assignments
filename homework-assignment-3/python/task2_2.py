@@ -44,9 +44,10 @@ def parse_user_set():
     return sc.textFile(filename) \
         .map(lambda json_string: json.loads(json_string)) \
         .map(lambda user_obj: (user_obj['user_id'], (user_obj['review_count'],
-                               user_obj['useful'], user_obj['funny'], user_obj['cool'], user_obj['fans'],
-                               user_obj['average_stars']
-                               ))
+                                                     user_obj['useful'], user_obj['funny'], user_obj['cool'],
+                                                     user_obj['fans'],
+                                                     user_obj['average_stars']
+                                                     ))
              )
 
 
@@ -84,10 +85,10 @@ def main():
     write_results_to_file(train_set)
 
     train_df = pd.DataFrame(train_set, columns=['user_id', 'business_id', 'rating', 'review_count', 'useful',
-                                                     'funny', 'cool', 'fans', 'average_stars', 'business_stars',
-                                                     'business_review_count'
-                                                     ]
-                                 )
+                                                'funny', 'cool', 'fans', 'average_stars', 'business_stars',
+                                                'business_review_count'
+                                                ]
+                            )
 
     model = xgb.XGBRegressor(n_estimators=1000, colsample_bytree=0.9, learning_rate=0.01)
     model.fit(train_df.drop(['user_id', 'business_id', 'rating'], axis=1).values, train_df[['rating']].values)
