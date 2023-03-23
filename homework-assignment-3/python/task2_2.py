@@ -78,6 +78,14 @@ def parse_business_set():
              )
 
 
+def write_results_to_file(data):
+    file_header = '{}\n'.format(', '.join(params['record_cols']))
+    with open(params['out_file'], 'w') as fh:
+        fh.write(file_header)
+        for record in data:
+            fh.write('{}\n'.format(','.join(map(lambda item: str(item), list(record)))))
+
+
 def fill_features(record, user_data, business_data):
     user_features = user_data.get(record[0], (0, 0, 0, 0, 0, 0, 0))
     business_features = business_data.get(record[1], (0, 0))
@@ -98,12 +106,13 @@ def main():
     )
 
     # create test dataset
-    test_df = pd.DataFrame(
-        parse_test_set()
-        .map(lambda record: fill_features(record, user_data, business_data))
-        .collect(),
-        columns=params['record_cols'][: -1] + params['user_feature_cols'] + params['business_feature_cols']
-    )
+    test_set = parse_test_set() \
+        .map(lambda record: fill_features(record, user_data, business_data)) \
+        .collect()
+    test_df = pd.DataFrame(test_set,
+                           columns=params['record_cols'][: -1] + params['user_feature_cols'] + params[
+                               'business_feature_cols']
+                           )
 
     # define the regressor model
     model = xgb.XGBRegressor(n_estimators=100, learning_rate=0.1, verbosity=0)
@@ -113,9 +122,10 @@ def main():
     predictions = model.predict(test_df.drop(params['record_cols'][: -1], axis=1).values)
 
     # format data and write to file
-    results_df = test_df.copy(deep=True)
-    results_df[params['record_cols'][-1]] = predictions
-    results_df[params['record_cols']].to_csv(params['out_file'], index=False)
+    write_results_to_file(map(
+        lambda indexed_pair: (indexed_pair[1][0], indexed_pair[1][1], predictions[indexed_pair[0]]),
+        enumerate(test_set)
+    ))
 
 
 if __name__ == '__main__':
