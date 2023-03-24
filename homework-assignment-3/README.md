@@ -16,7 +16,23 @@ The signature is generated first using min-hashing followed by LSH by dividing t
 maximize precision and recall, while achieving an acceptable time frame for termination.
 
 ### Task 2: Recommendation System
+In task 2, different types of recommendation systems are implemented using the ```yelp_train.csv``` dataset to
+predict the ratings/stars for given user ids and business ids. The validation dataset
+```yelp_val.csv``` is used to evaluate the accuracy of the recommendation systems.
+</br> This task is further divided into three subtasks.
 
+#### Task 2.1. Item-based CF recommendation system with Pearson similarity
+Here an item-based recommendation system with Pearson similarity as similarity measure is implemented.
+Note: Since it is a CF-based recommendation system, there are some inherent limitations to this
+approach like cold-start.
+
+#### Task 2.2. Model based recommendation system
+Here various features are used form the ```user.json``` and ```business.json``` file in addition to the training
+dataset to train a model based on a regressor based on Decision Tree using the [```XGBRegressor```](https://xgboost.readthedocs.io/en/latest/python/python_api.html)
+library.
+
+#### Task 2.3. Hybrid recommendation system
+Here the previous two approaches are combined to get better recommendations.
 
 ## Dataset
 
@@ -54,4 +70,90 @@ x-8ZMKKNycT3782Kqf9loA,jgtWfJCJZty_Nctqpdtp3g,5.0
 0FVcoJko1kfZCrJRfssfIA,JVK8szNDoy9MNiYSz_MiAA,4.0
 LcCRMIDz1JgshpPGYfLDcA,t19vb_4ML2dg5HZ-MF3muA,5.0
 C__1BHWTGBNA5s2ZPH289g,h_UvnQfe1cuVICly_kIqHg,2.0
+```
+
+### File 3: ```user.json```
+This file is used to extract user features for the model-based recommendation system implementation
+used for tasks 2.2 and 2.3. This file contains records of users with some attributes as shown below.
+<br/> Note: There may be other attributes not present in this record.
+```
+{
+  "user_id": "s4FoIXE_LSGviTHBe8dmcg",
+  "name": "Shashank",
+  "review_count": 3,
+  "yelping_since": "2017-06-18",
+  "friends": "None",
+  "useful": 0,
+  "funny": 0,
+  "cool": 0,
+  "fans": 0,
+  "elite": "None",
+  "average_stars": 3,
+  "compliment_hot": 0,
+  "compliment_more": 0,
+  "compliment_profile": 0,
+  "compliment_cute": 0,
+  "compliment_list": 0,
+  "compliment_note": 0,
+  "compliment_plain": 0,
+  "compliment_cool": 0,
+  "compliment_funny": 0,
+  "compliment_writer": 0,
+  "compliment_photos": 0
+}
+```
+
+### File 4: ```business.json```
+This file is used to extract business features for the model-based recommendation system implementation
+used for tasks 2.2 and 2.3. This file contains records of businesses with some attributes as shown below.
+<br/> Note: There may be other attributes not present in this record.
+```
+{
+  "business_id": "cuXCQM-9VwpZlSneEY1b3w",
+  "name": "Indian Street Food Company",
+  "neighborhood": "Mount Pleasant and Davisville",
+  "address": "1701 Bayview Avenue",
+  "city": "Toronto",
+  "state": "ON",
+  "postal_code": "M4G 3C1",
+  "latitude": 43.708002,
+  "longitude": -79.375814,
+  "stars": 3.5,
+  "review_count": 51,
+  "is_open": 1,
+  "attributes": {
+    "Alcohol": "full_bar",
+    "Ambience": "{'romantic': False, 'intimate': False, 'classy': False, 'hipster': False, 'touristy': False, 'trendy': True, 'upscale': False, 'casual': False}",
+    "BikeParking": "True",
+    "BusinessParking": "{'garage': False, 'street': True, 'validated': False, 'lot': False, 'valet': False}",
+    "Caters": "True",
+    "CoatCheck": "False",
+    "GoodForDancing": "False",
+    "GoodForKids": "True",
+    "GoodForMeal": "{'dessert': False, 'latenight': False, 'lunch': False, 'dinner': True, 'breakfast': False, 'brunch': False}",
+    "HappyHour": "False",
+    "HasTV": "False",
+    "Music": "{'dj': False, 'background_music': True, 'no_music': False, 'karaoke': False, 'live': False, 'video': False, 'jukebox': False}",
+    "NoiseLevel": "average",
+    "OutdoorSeating": "False",
+    "RestaurantsAttire": "casual",
+    "RestaurantsDelivery": "True",
+    "RestaurantsGoodForGroups": "True",
+    "RestaurantsPriceRange2": "2",
+    "RestaurantsReservations": "True",
+    "RestaurantsTableService": "True",
+    "RestaurantsTakeOut": "True",
+    "Smoking": "no"
+  },
+  "categories": "Nightlife, Wine Bars, Indian, Restaurants, Bars",
+  "hours": {
+    "Monday": "17:0-22:0",
+    "Tuesday": "17:0-22:0",
+    "Wednesday": "17:0-22:0",
+    "Thursday": "17:0-22:0",
+    "Friday": "17:30-22:30",
+    "Saturday": "17:30-22:30",
+    "Sunday": "17:30-22:30"
+  }
+}
 ```
