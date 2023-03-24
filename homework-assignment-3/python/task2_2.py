@@ -87,8 +87,8 @@ def write_results_to_file(data):
 
 
 def fill_features(record, user_data, business_data):
-    user_features = user_data.get(record[0], (0, 0, 0, 0, 0, 0, 0))
-    business_features = business_data.get(record[1], (0, 0))
+    user_features = user_data.get(record[0], tuple([0] * len(params['user_feature_cols'])))
+    business_features = business_data.get(record[1], tuple([0] * len(params['business_feature_cols'])))
     return record + user_features + business_features
 
 
