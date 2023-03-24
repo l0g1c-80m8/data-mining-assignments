@@ -25,7 +25,7 @@ def parse_args():
 
     # read program arguments
     run_time_params = dict()
-    run_time_params['app_name'] = 'hw3-task2_1'
+    run_time_params['app_name'] = 'hw3-task2_3'
     run_time_params['in_dir'] = sys.argv[1]
     run_time_params['test_file'] = sys.argv[2]
     run_time_params['out_file'] = sys.argv[3]
