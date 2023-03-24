@@ -5,6 +5,21 @@ Hashing (LSH), and different types of collaborative-filtering recommendation sys
 required for this assignment is a subset from the Yelp dataset used in the previous assignments.
 For task specifications look at the description file [here](Homework%203%20Description.pdf). 
 
+<!-- TOC -->
+* [Homework 3: Collaborative Filtering Recommendation Systems](#homework-3--collaborative-filtering-recommendation-systems)
+  * [Tasks](#tasks)
+    * [Task 1: Jaccard Based LSH](#task-1--jaccard-based-lsh)
+    * [Task 2: Recommendation System](#task-2--recommendation-system)
+      * [Task 2.1. Item-based CF recommendation system with Pearson similarity](#task-21-item-based-cf-recommendation-system-with-pearson-similarity)
+      * [Task 2.2. Model based recommendation system](#task-22-model-based-recommendation-system)
+      * [Task 2.3. Hybrid recommendation system](#task-23-hybrid-recommendation-system)
+  * [Dataset](#dataset)
+    * [File 1: ```yelp_train.csv```](#file-1--yelptraincsv)
+    * [File 2: ```yelp_val.csv```](#file-2--yelpvalcsv)
+    * [File 3: ```user.json```](#file-3--userjson)
+    * [File 4: ```business.json```](#file-4--businessjson)
+<!-- TOC -->
+
 ## Tasks
 
 ### Task 1: Jaccard Based LSH
