@@ -115,7 +115,7 @@ def main():
                            )
 
     # define the regressor model
-    model = xgb.XGBRegressor(n_estimators=100, learning_rate=0.1, verbosity=0)
+    model = xgb.XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=10, booster='gbtree', verbosity=0)
     # train the model
     model.fit(train_df.drop(params['record_cols'], axis=1).values, train_df[params['record_cols'][-1:]].values)
     # generate predictions
