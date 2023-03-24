@@ -1,12 +1,15 @@
 """
 Homework Assignment 3
-Task 2 (Part 1)
+Task 2 (Part 3)
 
-An item-based collaborative filtering mechanism to generate recommendation of businesses (items) for users.
+Combine the recommendations systems developed in parts 1 and 2 into a hybrid system.
 """
 
+import json
 import os
+import pandas as pd
 import sys
+import xgboost as xgb
 
 from datetime import datetime
 from functools import reduce
@@ -78,6 +81,45 @@ def parse_test_set():
         .filter(lambda line: line.strip() != header) \
         .map(lambda line: line.split(',')) \
         .map(lambda record: (record[1], record[0]))
+
+
+def parse_train_set():
+    filename = '{}/{}'.format(params['in_dir'], params['train'])
+    with open(filename, 'r') as fh:
+        header = fh.readline().strip()
+
+    return sc.textFile(filename) \
+        .filter(lambda line: line.strip() != header) \
+        .map(lambda line: line.split(',')) \
+        .map(lambda record: (record[0], record[1], float(record[2])))
+
+
+def parse_user_set():
+    filename = '{}/{}'.format(params['in_dir'], params['user'])
+
+    return sc.textFile(filename) \
+        .map(lambda json_string: json.loads(json_string)) \
+        .map(lambda user_obj: (user_obj[params['record_cols'][0]],
+                               tuple(map(
+                                   lambda col_name: user_obj[col_name],
+                                   params['user_feature_cols']
+                               ))
+                               )
+             )
+
+
+def parse_business_set():
+    filename = '{}/{}'.format(params['in_dir'], params['business'])
+
+    return sc.textFile(filename) \
+        .map(lambda json_string: json.loads(json_string)) \
+        .map(lambda business_obj: (business_obj[params['record_cols'][1]],
+                                   tuple(map(
+                                       lambda col_name: business_obj[col_name.replace('business_', '')],
+                                       params['business_feature_cols']
+                                   ))
+                                   )
+             )
 
 
 def pearson_similarity(entry1, entry2):
@@ -202,8 +244,46 @@ def item_based_cf_prediction():
         .collectAsMap()
 
 
+def fill_features(record, user_data, business_data):
+    user_features = user_data.get(record[0], tuple([0] * len(params['user_feature_cols'])))
+    business_features = business_data.get(record[1], tuple([0] * len(params['business_feature_cols'])))
+    return record + user_features + business_features
+
+
 def model_based_prediction():
-    return dict()
+    # create feature data
+    user_data = parse_user_set().collectAsMap()
+    business_data = parse_business_set().collectAsMap()
+
+    # create training dataset
+    train_df = pd.DataFrame(
+        parse_train_set()
+        .map(lambda record: fill_features(record, user_data, business_data))
+        .collect(),
+        columns=params['record_cols'] + params['user_feature_cols'] + params['business_feature_cols']
+    )
+
+    # create test dataset
+    test_set = parse_test_set() \
+        .map(lambda record: (record[1], record[0])) \
+        .map(lambda record: fill_features(record, user_data, business_data)) \
+        .collect()
+    test_df = pd.DataFrame(test_set,
+                           columns=params['record_cols'][: -1] + params['user_feature_cols'] + params[
+                               'business_feature_cols']
+                           )
+
+    # define the regressor model
+    model = xgb.XGBRegressor(n_estimators=100, learning_rate=0.1, verbosity=0)
+    # train the model
+    model.fit(train_df.drop(params['record_cols'], axis=1).values, train_df[params['record_cols'][-1:]].values)
+    # generate predictions
+    predictions = model.predict(test_df.drop(params['record_cols'][: -1], axis=1).values)
+
+    return dict(map(
+        lambda indexed_pair: ((indexed_pair[1][0], indexed_pair[1][1]), predictions[indexed_pair[0]]),
+        enumerate(test_set)
+    ))
 
 
 def main():
