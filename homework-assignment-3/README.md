@@ -172,3 +172,20 @@ used for tasks 2.2 and 2.3. This file contains records of businesses with some a
   }
 }
 ```
+
+### File 5: ```yelp_val_in.csv```
+This is the subset of the original dataset that is used as a test file. It is the same as the ```yelp_val.csv``` file except the last column (ratings). This file resembles the format of the test file for the program.<br/>
+The file contains records of reviews by users on businesses in the form of stars. A small sample of the dataset is given below.
+```
+user_id,business_id,stars
+wf1GqnKQuvH-V3QN80UOOQ,fThrN4tfupIGetkrz18JOg
+39FT2Ui8KUXwmUt6hnwy-g,uW6UHfONAmm8QttPkbMewQ
+7weuSPSSqYLUFga6IYP4pg,IhNASEZ3XnBHmuuVnWdIwA
+CqaIzLiWaa-lMFYBAsYQxw,G859H6xfAmVLxbzQgipuoA
+yy7shAsNWRbGg-8Y67Dzag,rS39YnrhoXmPqHLzCBjeqw
+Uk1UKBIAwOqhjZdLm3r9zg,5CJL_2-XwCGBmOav4mFdYg
+x-8ZMKKNycT3782Kqf9loA,jgtWfJCJZty_Nctqpdtp3g
+0FVcoJko1kfZCrJRfssfIA,JVK8szNDoy9MNiYSz_MiAA
+LcCRMIDz1JgshpPGYfLDcA,t19vb_4ML2dg5HZ-MF3muA
+C__1BHWTGBNA5s2ZPH289g,h_UvnQfe1cuVICly_kIqHg
+```
