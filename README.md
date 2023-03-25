@@ -1,7 +1,21 @@
+<!-- TOC -->
+  * [Assignments for DSCI 553 : Foundations and Applications of Data Mining](#assignments-for-dsci-553--foundations-and-applications-of-data-mining)
+      * [Instructor: Professor Wei-Min Shen (Spring 2023)](#instructor--professor-wei-min-shen--spring-2023-)
+      * [Reference:](#reference-)
+    * [Summary](#summary)
+<!-- TOC -->
+
 ## Assignments for DSCI 553 : Foundations and Applications of Data Mining ##
 Repo to contain the assignments for [DSCI 553](https://web-app.usc.edu/soc/syllabus/20223/32440.pdf): Foundations and Applications of Data Mining course at USC.
 
 #### Instructor: Professor [Wei-Min Shen](https://viterbi-web.usc.edu/~wmshen/) (Spring 2023)
+
+#### Reference: 
+<pre>
+ <code>
+  <a href="http://infolab.stanford.edu/~ullman/mmds.html">Rajaraman, J. Leskovec and J. D. Ullman, Mining of Massive Datasets, Cambridge University Press, 2012.</a>
+ </code>
+</pre>
 
 Follow [these](homework-assignment-0/README.md) instructions to run the script locally and on Vocareum.
 
