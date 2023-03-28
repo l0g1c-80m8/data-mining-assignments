@@ -5,6 +5,13 @@ library. The ```ub_sample_data.csv``` dataset is used to find users who have sim
 The goal of this assignment is to understand how to use the Girvan-Newman algorithm to detect communities 
 in an efficient  way within a distributed environment.
 
+<!-- TOC -->
+* [Homework 4: Community Detection](#homework-4--community-detection)
+  * [Tasks](#tasks)
+    * [Task 1: Community Detection using the GraphFrames library (Label Propagation Algorithm)](#task-1--community-detection-using-the-graphframes-library--label-propagation-algorithm-)
+  * [Dataset](#dataset)
+<!-- TOC -->
+
 ## Tasks
 
 ### Task 1: Community Detection using the GraphFrames library (Label Propagation Algorithm)
