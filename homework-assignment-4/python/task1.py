@@ -65,7 +65,7 @@ def write_results_to_file(communities):
     ))
 
     with open(params.out_file, 'w') as fh:
-        for community in sorted(community_map.values(), key=lambda c: '{}-{}'.format(len(c), c[0])):
+        for community in sorted(community_map.values(), key=lambda c: (len(c), c[0])):
             fh.write('{}\n'.format((', '.join(map(lambda user_id: "'{}'".format(user_id), community)))))
 
 
