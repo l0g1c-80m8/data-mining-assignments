@@ -14,7 +14,9 @@ import os
 import sys
 
 from argparse import Namespace
+from collections import defaultdict
 from datetime import datetime
+from functools import reduce
 from graphframes import GraphFrame
 from pyspark import SparkConf, SparkContext
 from pyspark.sql import Row, SparkSession
@@ -53,7 +55,18 @@ def get_edges_from_dataset():
 
 
 def write_results_to_file(communities):
-    print('results')
+    def _add_node_to_community(acc, row):
+        acc[row.label].append(row.id)
+        return acc
+
+    community_map = dict(map(
+        lambda label_value_pair: (label_value_pair[0], sorted(label_value_pair[1])),
+        reduce(_add_node_to_community, communities, defaultdict(list)).items()
+    ))
+
+    with open(params.out_file, 'w') as fh:
+        for community in sorted(community_map.values(), key=lambda c: '{}-{}'.format(len(c), c[0])):
+            fh.write('{}\n'.format((', '.join(map(lambda user_id: "'{}'".format(user_id), community)))))
 
 
 def main():
