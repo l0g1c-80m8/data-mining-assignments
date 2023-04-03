@@ -13,76 +13,77 @@ Edges - Between users that have a certain minimum number of common businesses.
 import os
 import sys
 
-from argparse import ArgumentParser
+from argparse import Namespace
 from datetime import datetime
+from graphframes import GraphFrame
 from pyspark import SparkConf, SparkContext
+from pyspark.sql import Row, SparkSession
 
 
 def get_runtime_params():
-    # create argument list
-    argv = sys.argv + ['hw4-task1']
-
-    # create parser instance
-    parser = ArgumentParser(
-        prog='Construct Graph',
-        description='construct a graph from the dataset based on the specs in the hw document',
-        epilog=''.join(['-'] * 60)
-    )
-    parser.add_argument('executable')
-    parser.add_argument('filter_threshold')
-    parser.add_argument('in_file')
-    parser.add_argument('out_file')
-    parser.add_argument('app_name')
-
-    # parse arguments
-    runtime_params = parser.parse_args(argv)
-
-    # transform params as required
-    runtime_params.filter_threshold = int(runtime_params.filter_threshold)
+    if len(sys.argv) < 3:
+        # expected arguments: script path, dataset path, output file path
+        print('ERR: Expected three arguments: (threshold, input file, output file).')
+        exit(1)
 
     # return the params
-    return runtime_params
+    return Namespace(
+        app_name='hw4-task1',
+        filter_threshold=int(sys.argv[1]),
+        in_file=sys.argv[2],
+        out_file=sys.argv[3]
+    )
 
 
-def parse_dataset():
+def get_edges_from_dataset():
     with open(params.in_file, 'r') as fh:
         header = fh.readline().strip()
 
-        return sc.textFile(params.in_file) \
+        ub_membership_rdd = sc.textFile(params.in_file) \
             .filter(lambda line: line.strip() != header) \
-            .map(lambda line: tuple(line.split(',')))
+            .map(lambda line: tuple(line.split(','))) \
+            .groupByKey() \
+            .map(lambda user_businesses: (user_businesses[0], set(user_businesses[1])))
+
+        return ub_membership_rdd \
+            .cartesian(ub_membership_rdd) \
+            .filter(lambda pair: pair[0][0] != pair[1][0]) \
+            .filter(lambda pair: len(pair[0][1].intersection(pair[1][1])) >= params.filter_threshold) \
+            .map(lambda pair: (pair[0][0], pair[1][0]))
 
 
-def get_edges_from_dataset(dataset_rdd):
-    ub_membership_rdd = dataset_rdd \
-        .groupByKey() \
-        .map(lambda user_businesses: (user_businesses[0], set(user_businesses[1])))
-
-    return ub_membership_rdd \
-        .cartesian(ub_membership_rdd) \
-        .filter(lambda pair: pair[0][0] != pair[1][0]) \
-        .filter(lambda pair: len(pair[0][1].intersection(pair[1][1])) >= params.filter_threshold) \
-        .map(lambda pair: (pair[0][0], pair[1][0])) \
-        .collect()
+def write_results_to_file(communities):
+    print('results')
 
 
 def main():
-    # parse the dataset into a rdd
-    dataset_rdd = parse_dataset()
+    # get edges - all users with a certain number of common businesses
+    edges = get_edges_from_dataset()
 
     # get vertices - all unique users
-    vertices = set(dataset_rdd.collectAsMap().keys())
+    vertices_row = Row("id")
+    vertices = edges \
+        .map(lambda user_pair: user_pair[0]) \
+        .distinct() \
+        .map(vertices_row)
 
-    # get edges - all users with a certain number of common businesses
-    edges = get_edges_from_dataset(dataset_rdd)
+    # create graph frame
+    vertices_df = vertices.toDF(["id"])
+    edges_df = edges.toDF(["src", "dst"])
+    gf = GraphFrame(vertices_df, edges_df)
 
-    print(len(vertices), len(edges))
+    # run label propagation algorithm
+    communities = gf.labelPropagation(maxIter=5).collect()
+
+    # collect result and write to file
+    write_results_to_file(communities)
 
 
 if __name__ == '__main__':
     # set executables
     os.environ['PYSPARK_PYTHON'] = sys.executable
     os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
+    os.environ["PYSPARK_SUBMIT_ARGS"] = "--packages graphframes:graphframes:0.8.2-spark3.1-s_2.12 pyspark-shell"
 
     # parse and define params
     params = get_runtime_params()
@@ -90,6 +91,7 @@ if __name__ == '__main__':
     # create spark context
     sc = SparkContext(conf=SparkConf().setAppName(params.app_name).setMaster("local[*]"))
     sc.setLogLevel('ERROR')
+    spark = SparkSession(sc)
 
     # run community detection (based on Label Propagation Algorithm
     start_ts = datetime.now()
@@ -99,5 +101,3 @@ if __name__ == '__main__':
 
     # exit without errors
     exit(0)
-
-
