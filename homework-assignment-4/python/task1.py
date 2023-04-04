@@ -23,7 +23,7 @@ from pyspark.sql import Row, SparkSession
 
 
 def get_runtime_params():
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 4:
         # expected arguments: script path, dataset path, output file path
         print('ERR: Expected three arguments: (threshold, input file, output file).')
         exit(1)
