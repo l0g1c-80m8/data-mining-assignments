@@ -1,7 +1,7 @@
 <!-- TOC -->
-  * [Assignments for DSCI 553 : Foundations and Applications of Data Mining](#assignments-for-dsci-553--foundations-and-applications-of-data-mining)
-      * [Instructor: Professor Wei-Min Shen (Spring 2023)](#instructor--professor-wei-min-shen--spring-2023-)
-    * [Summary](#summary)
+  * [Assignments for DSCI 553 : Foundations and Applications of Data Mining](#assignments-for-dsci-553--foundations-and-applications-of-data-mining-)
+      * [Instructor: Professor Wei-Min Shen (Spring 2023)](#instructor-professor-wei-min-shen-spring-2023)
+    * [Summary](#summary-)
     * [Reference](#reference)
 <!-- TOC -->
 

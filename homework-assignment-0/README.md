@@ -4,15 +4,15 @@ The purpose of this homework is to get familiar with Vocareum Lab infrastructure
 environment to be used to run the project submission on.
 
 <!-- TOC -->
-* [Homework 0: Word Count of a File using Map-Reduce](#homework-0--word-count-of-a-file-using-map-reduce)
-  * [Python (with pyspark)](#python--with-pyspark-)
-    * [To run the python programs on Vocareum terminal the following steps are needed:](#to-run-the-python-programs-on-vocareum-terminal-the-following-steps-are-needed-)
-    * [To run the python files locally, perform the following steps:](#to-run-the-python-files-locally-perform-the-following-steps-)
-    * [Versions](#versions)
+* [Homework 0: Word Count of a File using Map-Reduce](#homework-0-word-count-of-a-file-using-map-reduce)
+  * [Python (with pyspark)](#python-with-pyspark)
+    * [To run the python programs on Vocareum terminal the following steps are needed:](#to-run-the-python-programs-on-vocareum-terminal-the-following-steps-are-needed)
+    * [To run the python files locally, perform the following steps:](#to-run-the-python-files-locally-perform-the-following-steps)
+    * [Versions](#versions-)
   * [Scala](#scala)
-    * [To run Scala jar on Vocareum, and use the following command:](#to-run-scala-jar-on-vocareum-and-use-the-following-command-)
-    * [To run Scala program locally, build the artifacts (jars) and use the following command:](#to-run-scala-program-locally-build-the-artifacts--jars--and-use-the-following-command-)
-    * [Versions](#versions-1)
+    * [To run Scala jar on Vocareum, and use the following command:](#to-run-scala-jar-on-vocareum-and-use-the-following-command)
+    * [To run Scala program locally, build the artifacts (jars) and use the following command:](#to-run-scala-program-locally-build-the-artifacts-jars-and-use-the-following-command)
+    * [Versions](#versions--1)
   * [Troubleshoot](#troubleshoot)
 <!-- TOC -->
 

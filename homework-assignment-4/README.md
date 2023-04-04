@@ -6,9 +6,9 @@ The goal of this assignment is to understand how to use the Girvan-Newman algori
 in an efficient  way within a distributed environment.
 
 <!-- TOC -->
-* [Homework 4: Community Detection](#homework-4--community-detection)
+* [Homework 4: Community Detection](#homework-4-community-detection)
   * [Tasks](#tasks)
-    * [Task 1: Community Detection using the GraphFrames library (Label Propagation Algorithm)](#task-1--community-detection-using-the-graphframes-library--label-propagation-algorithm-)
+    * [Task 1: Community Detection using the GraphFrames library (Label Propagation Algorithm)](#task-1-community-detection-using-the-graphframes-library-label-propagation-algorithm)
   * [Dataset](#dataset)
 <!-- TOC -->
 
