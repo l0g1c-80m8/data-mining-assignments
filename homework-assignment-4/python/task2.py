@@ -36,8 +36,37 @@ def get_runtime_params():
     )
 
 
+def get_edges_from_dataset():
+    with open(params.in_file, 'r') as fh:
+        header = fh.readline().strip()
+
+        ub_membership_rdd = sc.textFile(params.in_file) \
+            .filter(lambda line: line.strip() != header) \
+            .map(lambda line: tuple(line.split(','))) \
+            .groupByKey() \
+            .map(lambda user_businesses: (user_businesses[0], set(user_businesses[1])))
+
+        return ub_membership_rdd \
+            .cartesian(ub_membership_rdd) \
+            .filter(lambda pair: pair[0][0] != pair[1][0]) \
+            .filter(lambda pair: len(pair[0][1].intersection(pair[1][1])) >= params.filter_threshold) \
+            .map(lambda pair: (pair[0][0], pair[1][0]))
+
+
 def main():
-    print(params)
+    # get edges - all users with a certain number of common businesses
+    all_edges = get_edges_from_dataset()
+    edges = all_edges \
+        .map(lambda pair: tuple(sorted(pair))) \
+        .distinct()
+
+    # get vertices - all unique users
+    vertices = all_edges \
+        .map(lambda user_pair: user_pair[0]) \
+        .distinct()
+
+    print(edges.collect())
+    print(vertices.collect())
 
 
 if __name__ == '__main__':
