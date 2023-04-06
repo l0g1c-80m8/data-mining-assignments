@@ -120,13 +120,23 @@ def main():
     # get edges - all users with a certain number of common businesses
     edges_rdd = get_edges_from_dataset()
 
-    # task 2 part 1 - get betweenness values for the original graph and save the output to the file
+    # create a graph adjacency list
     graph_al = edges_rdd \
         .groupByKey() \
         .mapValues(set) \
         .collectAsMap()
+
+    # get node degrees
+    node_degree_map = dict(map(
+        lambda node_neighbors_pair: (node_neighbors_pair[0], len(node_neighbors_pair[1])),
+        graph_al.items()
+    ))
+
+    # task 2 part 1 - get betweenness values for the original graph and save the output to the file
     betweenness = girvan_newman(graph_al)
     write_betweenness_to_file(betweenness)
+
+    # task 2 part 2 - find communities based on highest global modularity measure
 
 
 if __name__ == '__main__':
