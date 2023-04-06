@@ -57,8 +57,8 @@ def get_edges_from_dataset():
 
 def get_level_tree(graph_al, root):
     level_tree = defaultdict(lambda: defaultdict(set))
-    bf_tree = defaultdict(int)
-    bf_tree[root] = 1
+    parent_count_map = defaultdict(int)
+    parent_count_map[root] = 1
     level_tree[0] = {root: set()}
     q = [(root, 1)]
     introduced = defaultdict(lambda: float('inf'))
@@ -73,25 +73,25 @@ def get_level_tree(graph_al, root):
                     q.append((neighbor, level + 1))
                     if level < introduced[neighbor]:
                         level_tree[level][neighbor].add(node)
-                        bf_tree[neighbor] += bf_tree[node]
+                        parent_count_map[neighbor] += parent_count_map[node]
                         introduced[neighbor] = level + 1
 
-    return level_tree, bf_tree
+    return level_tree, parent_count_map
 
 
-def get_edge_betweenness(bf_tree, level_tree):
+def get_edge_betweenness(parent_count_map, level_tree):
     edge_betweenness = defaultdict(int)
     node_credits = defaultdict(int)
     for level in range(max(level_tree.keys()), -1, -1):
         for node, parents in level_tree[level].items():
             total_credits = 1 + node_credits[node]
             total_paths = reduce(
-                lambda acc, parent_node: acc + bf_tree[parent_node],
+                lambda acc, parent_node: acc + parent_count_map[parent_node],
                 parents,
                 0
             )
             for parent in parents:
-                credits = total_credits * (bf_tree[parent] / total_paths)
+                credits = total_credits * (parent_count_map[parent] / total_paths)
                 edge_betweenness[tuple(sorted([node, parent]))] = credits
                 node_credits[parent] += credits
 
@@ -101,8 +101,8 @@ def get_edge_betweenness(bf_tree, level_tree):
 def girvan_newman(graph_al):
     edge_betweenness = defaultdict(int)
     for node in graph_al:
-        level_tree, bf_tree = get_level_tree(graph_al, node)
-        for edge, betweenness in get_edge_betweenness(bf_tree, level_tree).items():
+        level_tree, parent_count_map = get_level_tree(graph_al, node)
+        for edge, betweenness in get_edge_betweenness(parent_count_map, level_tree).items():
             edge_betweenness[edge] += betweenness
 
     for edge in edge_betweenness:
