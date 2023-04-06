@@ -9,6 +9,9 @@ in an efficient  way within a distributed environment.
 * [Homework 4: Community Detection](#homework-4-community-detection)
   * [Tasks](#tasks)
     * [Task 1: Community Detection using the GraphFrames library (Label Propagation Algorithm)](#task-1-community-detection-using-the-graphframes-library-label-propagation-algorithm)
+    * [Task 2: Community Detection using the Girvan-Newman algorithm (maximizing modularity)](#task-2-community-detection-using-the-girvan-newman-algorithm-maximizing-modularity)
+      * [Task 2.1. Betweenness Calculation](#task-21-betweenness-calculation)
+      * [Task 2.2. Community Detection](#task-22-community-detection)
   * [Dataset](#dataset)
 <!-- TOC -->
 
@@ -30,6 +33,23 @@ detection solution whereby information “flows” through the graph based on un
 References for GraphFrames:
  - [Python](https://docs.databricks.com/spark/latest/graph-analysis/graphframes/user-guide-python.html)
  - [Scala](https://docs.databricks.com/spark/latest/graph-analysis/graphframes/user-guide-scala.html)
+
+
+### Task 2: Community Detection using the Girvan-Newman algorithm (maximizing modularity)
+
+In this task, the Girvan-Newman algorithm is implemented to detect the communities in the
+network graph. The graph construction is the same here as it is for Task 1.
+
+#### Task 2.1. Betweenness Calculation
+In this part, the betweenness of each edge in the original graph is calculated using the Girvan-Newman algorithm.
+
+#### Task 2.2. Community Detection
+In this part, the communities are detected using the algorithm implemented for part 1.
+The edges with the highest betweenness centrality measure are removed and the betweenness in the remaining graph is
+updated. This process is done recursively until all edges have been removed. Meanwhile, the modularity of the graph is
+also tracked and the partition yielding the highest modularity is decidedly declared as the set of communities in the
+graph.
+
 
 ## Dataset
 
