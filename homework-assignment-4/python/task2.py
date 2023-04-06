@@ -137,7 +137,7 @@ def get_graph_partition(graph_al):
 def get_modularity_community_division(graph_al, orig_edges, node_degree_map):
     normalizer = sum(node_degree_map.values())
     partition = get_graph_partition(graph_al)
-    return reduce(
+    return partition, reduce(
         lambda modularity, community: reduce(
             lambda acc, node_pair: (
                     acc
@@ -149,14 +149,42 @@ def get_modularity_community_division(graph_al, orig_edges, node_degree_map):
         ),
         partition,
         0
-    ) / normalizer, partition
+    ) / normalizer
+
+
+def get_highest_betweenness_edges(edge_betweenness):
+    highest_betweenness = max(edge_betweenness.values())
+    return list(map(
+        lambda edge_betweenness_pair: edge_betweenness_pair[0],
+        filter(
+            lambda edge_betweenness_pair: edge_betweenness_pair[1] == highest_betweenness,
+            edge_betweenness.items()
+        )
+    ))
+
+
+def prune_graph(graph_al, curr_edges, edges_to_prune):
+    for edge in edges_to_prune:
+        graph_al[edge[0]].remove(edge[1])
+        graph_al[edge[1]].remove(edge[0])
+        curr_edges.remove(edge)
+        curr_edges.remove((edge[1], edge[0]))
 
 
 def get_communities_from_graph(graph_al, orig_edges, node_degree_map):
-    communities, max_modularity = get_modularity_community_division(graph_al, orig_edges, node_degree_map)
-    print(communities, max_modularity)
+    communities, modularity = get_modularity_community_division(graph_al, orig_edges, node_degree_map)
+    curr_edges = {*orig_edges}
 
-    return {}
+    while len(curr_edges) > 0:
+        edge_betweenness = girvan_newman(graph_al)
+        highest_betweenness_edges = get_highest_betweenness_edges(edge_betweenness)
+        prune_graph(graph_al, curr_edges, highest_betweenness_edges)
+        inst_communities, inst_modularity = get_modularity_community_division(graph_al, curr_edges, node_degree_map)
+        if inst_modularity > modularity:
+            modularity = inst_modularity
+            communities = inst_communities
+
+    return communities
 
 
 def main():
