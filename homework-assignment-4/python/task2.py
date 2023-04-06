@@ -187,6 +187,20 @@ def get_communities_from_graph(graph_al, orig_edges, node_degree_map):
     return communities
 
 
+def write_communities_to_file(communities):
+    communities = sorted(list(map(
+        lambda community: sorted(map(
+            lambda node: "'{}'".format(node),
+            community
+        )),
+        communities
+    )), key=lambda c: (len(c), c[0]))
+
+    with open(params.out_modularity_file, 'w') as fh:
+        for community in communities:
+            fh.write('{}\n'.format(', '.join(community)))
+
+
 def main():
     # get edges - all users with a certain number of common businesses
     edges_rdd = get_edges_from_dataset()
@@ -209,7 +223,7 @@ def main():
 
     # task 2 part 2 - find communities based on highest global modularity measure
     communities = get_communities_from_graph(graph_al, set(edges_rdd.collect()), node_degree_map)
-    print(communities)
+    write_communities_to_file(communities)
 
 
 if __name__ == '__main__':
