@@ -113,7 +113,7 @@ def girvan_newman(graph_al):
 
 def write_betweenness_to_file(edge_betweenness):
     with open(params.out_betweenness_file, 'w') as fh:
-        for edge, betweenness in sorted(edge_betweenness.items(), key=lambda c: (c[1], c[0][0]), reverse=True):
+        for edge, betweenness in sorted(edge_betweenness.items(), key=lambda eb: (eb[1], eb[0][0]), reverse=True):
             fh.write('{},{}\n'.format(edge, round(betweenness, params.precision)))
 
 
