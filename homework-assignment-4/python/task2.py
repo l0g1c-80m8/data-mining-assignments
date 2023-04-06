@@ -97,11 +97,7 @@ def get_edge_betweenness(bf_tree, level_tree):
     return edge_betweenness
 
 
-def girvan_newman(edges_rdd):
-    graph_al = edges_rdd \
-        .groupByKey() \
-        .mapValues(set) \
-        .collectAsMap()
+def girvan_newman(graph_al):
     edge_betweenness = defaultdict(int)
     for node in graph_al:
         level_tree, bf_tree = get_level_tree(graph_al, node)
@@ -125,7 +121,11 @@ def main():
     edges_rdd = get_edges_from_dataset()
 
     # task 2 part 1 - get betweenness values for the original graph and save the output to the file
-    betweenness = girvan_newman(edges_rdd)
+    graph_al = edges_rdd \
+        .groupByKey() \
+        .mapValues(set) \
+        .collectAsMap()
+    betweenness = girvan_newman(graph_al)
     write_betweenness_to_file(betweenness)
 
 
