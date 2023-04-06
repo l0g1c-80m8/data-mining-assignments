@@ -16,6 +16,7 @@ from argparse import Namespace
 from collections import defaultdict
 from datetime import datetime
 from functools import reduce
+from itertools import product
 from pyspark import SparkConf, SparkContext
 
 
@@ -116,6 +117,48 @@ def write_betweenness_to_file(edge_betweenness):
             fh.write('{},{}\n'.format(edge, round(betweenness, params.precision)))
 
 
+def get_graph_partition(graph_al):
+    partitions = []
+    visited = set()
+    for node in graph_al:
+        if node not in visited:
+            q = [node]
+            visited_in_partition = set()
+            while len(q) > 0:
+                partition_node = q.pop(0)
+                if partition_node not in visited_in_partition:
+                    visited_in_partition.add(partition_node)
+                    q.extend(graph_al[partition_node] - visited_in_partition)
+            partitions.append(visited_in_partition)
+            visited.update(visited_in_partition)
+    return partitions
+
+
+def get_modularity_community_division(graph_al, orig_edges, node_degree_map):
+    normalizer = sum(node_degree_map.values())
+    partition = get_graph_partition(graph_al)
+    return reduce(
+        lambda modularity, community: reduce(
+            lambda acc, node_pair: (
+                    acc
+                    + (1 if node_pair in orig_edges else 0)
+                    - node_degree_map[node_pair[0]] * node_degree_map[node_pair[1]] / normalizer
+            ),
+            product(community, community),
+            modularity
+        ),
+        partition,
+        0
+    ) / normalizer, partition
+
+
+def get_communities_from_graph(graph_al, orig_edges, node_degree_map):
+    communities, max_modularity = get_modularity_community_division(graph_al, orig_edges, node_degree_map)
+    print(communities, max_modularity)
+
+    return {}
+
+
 def main():
     # get edges - all users with a certain number of common businesses
     edges_rdd = get_edges_from_dataset()
@@ -137,6 +180,8 @@ def main():
     write_betweenness_to_file(betweenness)
 
     # task 2 part 2 - find communities based on highest global modularity measure
+    communities = get_communities_from_graph(graph_al, set(edges_rdd.collect()), node_degree_map)
+    print(communities)
 
 
 if __name__ == '__main__':
