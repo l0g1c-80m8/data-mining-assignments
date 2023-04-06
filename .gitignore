@@ -13,3 +13,6 @@
 
 # ignore local interpreter
 venv/
+
+# OS files
+**/.DS_Store
