@@ -85,15 +85,15 @@ def get_edge_betweenness(parent_count_map, level_tree):
     for level in range(max(level_tree.keys()), -1, -1):
         for node, parents in level_tree[level].items():
             total_credits = 1 + node_credits[node]
-            total_paths = min(reduce(
+            total_paths = reduce(
                 lambda acc, parent_node: acc + parent_count_map[parent_node],
                 parents,
                 0
-            ), 1)
+            )
             for parent in parents:
-                node_credits = total_credits * (parent_count_map[parent] / total_paths)
-                edge_betweenness[tuple(sorted([node, parent]))] = node_credits
-                node_credits[parent] += node_credits
+                credits = total_credits * (parent_count_map[parent] / total_paths)
+                edge_betweenness[tuple(sorted([node, parent]))] = credits
+                node_credits[parent] += credits
 
     return edge_betweenness
 
