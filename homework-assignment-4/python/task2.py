@@ -189,9 +189,9 @@ def get_communities_from_graph(graph_al, orig_edges, node_degree_map):
 
 def write_communities_to_file(communities):
     communities = sorted(list(map(
-        lambda community: sorted(map(
+        lambda community_node: sorted(map(
             lambda node: "'{}'".format(node),
-            community
+            community_node
         )),
         communities
     )), key=lambda c: (len(c), c[0]))
