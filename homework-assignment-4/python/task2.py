@@ -91,9 +91,9 @@ def get_edge_betweenness(parent_count_map, level_tree):
                 0
             ))
             for parent in parents:
-                credits = total_credits * (parent_count_map[parent] / total_paths)
-                edge_betweenness[tuple(sorted([node, parent]))] = credits
-                node_credits[parent] += credits
+                edge_credits = total_credits * (parent_count_map[parent] / total_paths)
+                edge_betweenness[tuple(sorted([node, parent]))] = edge_credits
+                node_credits[parent] += edge_credits
 
     return edge_betweenness
 
@@ -189,9 +189,9 @@ def get_communities_from_graph(graph_al, orig_edges, node_degree_map):
 
 def write_communities_to_file(communities):
     communities = sorted(list(map(
-        lambda community: sorted(map(
+        lambda community_nodes: sorted(map(
             lambda node: "'{}'".format(node),
-            community
+            community_nodes
         )),
         communities
     )), key=lambda c: (len(c), c[0]))
