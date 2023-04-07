@@ -85,7 +85,7 @@ def get_edge_betweenness(parent_count_map, level_tree):
     for level in range(max(level_tree.keys()), -1, -1):
         for node, parents in level_tree[level].items():
             total_credits = 1 + node_credits[node]
-            total_paths = min(1, reduce(
+            total_paths = max(1, reduce(
                 lambda acc, parent_node: acc + parent_count_map[parent_node],
                 parents,
                 0
