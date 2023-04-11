@@ -5,7 +5,7 @@
 **/dataset/
 
 # ignore output
-**/out/
+#**/out/
 
 # ignore scala project files
 **/**/project/target/
