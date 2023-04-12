@@ -91,8 +91,8 @@ def write_results_to_file(results):
 
 def main():
     results = list()
+    seen_users = set()
     for run_idx_ in range(PARAMS.NUM_OF_ASKS):
-        seen_users = set()
         false_bloom_count = 0
         for user in GLOB_NS.BX.ask(PARAMS.INPUT_FILE, PARAMS.STREAM_SIZE):
             user_hash_idxes = get_user_hashes(user)
