@@ -60,6 +60,16 @@ def get_runtime_global_ns():
     )
 
 
+def myhashs(user):
+    """
+    The purpose of this util is to expose the results of the get_user_hashes with a new name for external imports,
+    so that the results can be evaluated
+    :param user:
+    :return: user hashed indices on filter array
+    """
+    return get_user_hashes(user)
+
+
 def get_user_hashes(user):
     user_int_hash = int(hexlify(user.encode('utf8')), 16)
     return reduce(
