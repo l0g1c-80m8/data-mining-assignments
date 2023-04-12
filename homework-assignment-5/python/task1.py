@@ -5,7 +5,6 @@ Task 1
 Implement a bloom filter on a simulated datastream.
 """
 
-import os
 import sys
 
 from argparse import Namespace
