@@ -2,7 +2,7 @@
 Homework Assignment 5
 Task 1
 
-Implement Fljolet-Martin algorithm to estimate the number of unique users in a window of data steam.
+Implement Flajolet-Martin algorithm to estimate the number of unique users in a window of data steam.
 """
 
 import sys
@@ -83,15 +83,16 @@ def write_results_to_file(results):
     with open(PARAMS.OUTPUT_FILE, 'w') as fh:
         fh.write('{}\n'.format(','.join(PARAMS.OUT_FILE_HEADERS)))
         for result in results:
-            fh.write('{}, {}\n'.format(result[0], result[1], result[2]))
+            fh.write('{},{},{}\n'.format(result[0], result[1], result[2]))
 
 
 def main():
     results = list()
-
     for run_idx_ in range(PARAMS.NUM_OF_ASKS):
+        users = set()
         for user in GLOB_NS.BX.ask(PARAMS.INPUT_FILE, PARAMS.STREAM_SIZE):
-            print(get_user_hashes(user))
+            users.add(user)
+        results.append((run_idx_, len(users), len(users)))
 
     # write the results to a file
     write_results_to_file(results)

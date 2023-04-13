@@ -2,7 +2,7 @@
 Homework Assignment 5
 Task 3
 
-Implement reservoir sampling
+Implement reservoir sampling.
 """
 
 import sys
