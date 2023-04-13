@@ -109,23 +109,22 @@ def main():
     results = list()
     for run_idx_ in range(PARAMS.NUM_OF_ASKS):
         users = set()
-        max_trailing_zeros_len = [0] * PARAMS.N_HASHERS
+        unique_nums_estimate = [0] * PARAMS.N_HASHERS
         for user in GLOB_NS.BX.ask(PARAMS.INPUT_FILE, PARAMS.STREAM_SIZE):
             users.add(user)
             for idx, user_hash in enumerate(get_user_hashes(user)):
-                max_trailing_zeros_len[idx] = max(max_trailing_zeros_len[idx], count_trailing_zeroes(user_hash))
+                unique_nums_estimate[idx] = max(unique_nums_estimate[idx], 2 ** count_trailing_zeroes(user_hash))
         n_chunks = PARAMS.N_HASHERS // PARAMS.CHUNK_SIZE
         chunk_avg_trailing_zero = sorted(map(
             lambda chunk_idx: sum(
-                max_trailing_zeros_len[chunk_idx * PARAMS.CHUNK_SIZE:(chunk_idx + 1) * PARAMS.CHUNK_SIZE]
+                unique_nums_estimate[chunk_idx * PARAMS.CHUNK_SIZE:(chunk_idx + 1) * PARAMS.CHUNK_SIZE]
             ) / PARAMS.CHUNK_SIZE,
             range(n_chunks)
         ))
-        max_trailing_zero_median = chunk_avg_trailing_zero[n_chunks // 2]
-        max_trailing_zero_median += chunk_avg_trailing_zero[n_chunks // 2 - 1] if n_chunks % 2 != 0 else 0
-        max_trailing_zero_median /= 2 if n_chunks % 2 != 0 else 1
-        max_trailing_zero_median = round(max_trailing_zero_median)
-        results.append((run_idx_, len(users), 2 ** max_trailing_zero_median))
+        r_median = chunk_avg_trailing_zero[n_chunks // 2]
+        r_median += chunk_avg_trailing_zero[n_chunks // 2 - 1] if n_chunks % 2 != 0 else 0
+        r_median /= 2 if n_chunks % 2 != 0 else 1
+        results.append((run_idx_, len(users), round(r_median)))
 
     # write the results to a file
     write_results_to_file(results)
