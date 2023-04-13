@@ -1,6 +1,6 @@
 """
 Homework Assignment 5
-Task 1
+Task 2
 
 Implement Flajolet-Martin algorithm to estimate the number of unique users in a window of data steam.
 """
