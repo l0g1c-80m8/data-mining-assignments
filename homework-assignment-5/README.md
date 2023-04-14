@@ -1,13 +1,26 @@
 # Homework 5: Processing Data Streams
 
+In this assignment, on-line algorithms relating to the processing of data streams are explored.
+Take a look at the [homework specs](Homework%205%20Description.pdf) for exact details.
+
 ## Tasks
 
 ### Task 1: 
+Here the Bloom Filtering algorithm is implemented to estimate whether the user_id in the data stream has
+been seen before or not.
 
 ### Task 2: 
+Here the Flajolet-Martin algorithm (including the step of combining estimations from groups of hash functions) to 
+estimate the number of unique users within a window in the data stream is implemented.
 
-### Task 2: 
 
+### Task 3: 
+The goal of this task is to implement the fixed size sampling method (Reservoir Sampling Algorithm).
+It is assumed that the memory can only save `100` users, so we need to use the fixed size
+sampling method to only keep part of the users as a sample in the streaming. When the streaming of the
+users start the first 100 users are directly saved in to the reservoir (a list). After that, for the nth (n starts
+from 1) user in the whole sequence of users, the nth user is saved with the probability of 100/n 
+and randomly replaced with one of the users in the list.
 
 ## Stream Generation
 
