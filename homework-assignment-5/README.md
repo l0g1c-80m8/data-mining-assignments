@@ -3,6 +3,16 @@
 In this assignment, on-line algorithms relating to the processing of data streams are explored.
 Take a look at the [homework specs](Homework%205%20Description.pdf) for exact details.
 
+<!-- TOC -->
+* [Homework 5: Processing Data Streams](#homework-5-processing-data-streams)
+  * [Tasks](#tasks)
+    * [Task 1:](#task-1-)
+    * [Task 2:](#task-2-)
+    * [Task 3:](#task-3-)
+  * [Stream Generation](#stream-generation)
+  * [Dataset](#dataset)
+<!-- TOC -->
+
 ## Tasks
 
 ### Task 1: 
