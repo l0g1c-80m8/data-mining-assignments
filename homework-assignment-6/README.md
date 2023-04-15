@@ -57,6 +57,8 @@ in the dataset to evaluate the algorithm. Data points which are outliers belong 
 The first column is the data point index. The second column is the name/index of the cluster that the data point belongs
 to. The rest columns represent the features/dimensions of the data point.
 
+The dataset for this task can be found [here](https://drive.google.com/drive/folders/1tLuhdAiVaet4OOYrRwWgdeT-45ZU4WCV?usp=share_link).
+
 ```
 0,8,-127.64433989643463,-112.93438512156577,-123.4960457961025,114.4630547261514,121.64570029890073,-119.54171797733461,109.9719289517553,134.23436237925256,-117.61527240771153,120.42207629196271
 1,4,-38.191305707322314,-36.739481055180704,-34.47221450208468,33.640148757948026,-53.27570482090691,59.21790911677368,53.15109003438039,36.75210113936672,28.951427009179213,41.41404989722435
