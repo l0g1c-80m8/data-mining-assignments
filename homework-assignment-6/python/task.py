@@ -43,7 +43,7 @@ if __name__ == '__main__':
     sc = SparkContext(conf=SparkConf().setAppName(PARAMS.APP_NAME).setMaster("local[*]"))
     sc.setLogLevel('ERROR')
 
-    # run community detection (based on Label Propagation Algorithm
+    # run clustering
     start_ts = datetime.now()
     main()
     end_ts = datetime.now()
