@@ -6,9 +6,11 @@ Implement the Bradley-Fayyad-Reina (BFR) Algorithm to cluster multi-dimensional 
 """
 
 import sys
+import os
 
 from argparse import Namespace
 from datetime import datetime
+from pyspark import SparkConf, SparkContext
 
 
 def get_runtime_params():
@@ -30,9 +32,16 @@ def main():
 
 
 if __name__ == '__main__':
+    # set executables
+    os.environ['PYSPARK_PYTHON'] = sys.executable
+    os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
+
     # get runtime params
     PARAMS = get_runtime_params()
-    print(PARAMS)
+
+    # create spark context
+    sc = SparkContext(conf=SparkConf().setAppName(PARAMS.APP_NAME).setMaster("local[*]"))
+    sc.setLogLevel('ERROR')
 
     # run community detection (based on Label Propagation Algorithm
     start_ts = datetime.now()
