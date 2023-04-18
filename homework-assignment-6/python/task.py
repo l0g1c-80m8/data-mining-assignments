@@ -2,7 +2,7 @@
 Homework Assignment 6
 Task 1
 
-Implement the Bradley-Fayyad-Reina (BFR) Algorithm to cluster multi-dimensional data
+Implement the Bradley-Fayyad-Reina (BFR) Algorithm to cluster multidimensional data
 """
 
 import sys
