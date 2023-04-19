@@ -10,7 +10,11 @@ import os
 
 from argparse import Namespace
 from datetime import datetime
+from functools import reduce
 from pyspark import SparkConf, SparkContext
+from math import ceil
+from random import shuffle
+from sklearn.cluster import KMeans as kmc
 
 
 def get_runtime_params():
@@ -21,14 +25,37 @@ def get_runtime_params():
     # return the params
     return Namespace(
         APP_NAME='hw6-task',
-        INPUT_FILE=sys.argv[1],
+        IN_FILE=sys.argv[1],
         N_CLUSTERS=int(sys.argv[2]),
-        OUTPUT_FILE=sys.argv[3]
+        OUT_FILE=sys.argv[3],
+        CHUNK_SIZE_PERCENT=20  # 20 %
     )
 
 
+def get_data_chunks():
+    with open(PARAMS.IN_FILE, 'r') as fh:
+        header = fh.readline().strip()
+
+        data = sc.textFile(PARAMS.IN_FILE) \
+            .filter(lambda line: line.strip() != header) \
+            .map(lambda line: line.split(',')) \
+            .map(lambda record: (record[0], tuple(record[2:]))) \
+            .collect()
+        shuffle(data)
+        n_chunks = ceil(100 / PARAMS.CHUNK_SIZE_PERCENT)
+        chunk_size = ceil(len(data) / n_chunks)
+
+        return reduce(
+            lambda chunks, chunk_num: chunks + [data[chunk_num * chunk_size:(chunk_num + 1) * chunk_size]],
+            range(n_chunks),
+            list()
+        )
+
+
 def main():
-    pass
+    # chunked data
+    data_chunks = get_data_chunks()
+    print(list(map(len, data_chunks)))
 
 
 if __name__ == '__main__':
