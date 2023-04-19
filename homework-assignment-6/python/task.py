@@ -28,7 +28,10 @@ def get_runtime_params():
         IN_FILE=sys.argv[1],
         N_CLUSTERS=int(sys.argv[2]),
         OUT_FILE=sys.argv[3],
-        CHUNK_SIZE_PERCENT=20  # 20 %
+        CHUNK_SIZE_PERCENT=20,  # 20 %
+        KM_MAX_ITERS=300,
+        KM_TOL=1e-04,
+        N_CLUSTERS_SCALE=3
     )
 
 
@@ -36,11 +39,18 @@ def get_data_chunks():
     with open(PARAMS.IN_FILE, 'r') as fh:
         header = fh.readline().strip()
 
-        data = sc.textFile(PARAMS.IN_FILE) \
+        data_points = sc.textFile(PARAMS.IN_FILE) \
             .filter(lambda line: line.strip() != header) \
-            .map(lambda line: line.split(',')) \
-            .map(lambda record: (record[0], tuple(record[2:]))) \
+            .map(lambda line: line.split(','))
+
+        data_point_map = data_points \
+            .map(lambda record: (record[0], record[2:])) \
+            .collectAsMap()
+
+        data = data_points \
+            .map(lambda record: record[2:]) \
             .collect()
+
         shuffle(data)
         n_chunks = ceil(100 / PARAMS.CHUNK_SIZE_PERCENT)
         chunk_size = ceil(len(data) / n_chunks)
@@ -49,13 +59,36 @@ def get_data_chunks():
             lambda chunks, chunk_num: chunks + [data[chunk_num * chunk_size:(chunk_num + 1) * chunk_size]],
             range(n_chunks),
             list()
-        )
+        ), data_point_map
 
 
 def main():
+    # create instances to run kmeans clustering
+    km_inst_loose = kmc(
+        n_clusters=PARAMS.N_CLUSTERS * PARAMS.N_CLUSTERS_SCALE,
+        init='random',
+        n_init='auto',
+        max_iter=PARAMS.KM_MAX_ITERS,
+        tol=PARAMS.KM_TOL
+    )
+
+    km_inst_tight = kmc(
+        n_clusters=PARAMS.N_CLUSTERS,
+        init='random',
+        n_init='auto',
+        max_iter=PARAMS.KM_MAX_ITERS,
+        tol=PARAMS.KM_TOL
+    )
+
     # chunked data
-    data_chunks = get_data_chunks()
-    print(list(map(len, data_chunks)))
+    data_chunks, data_point_map = get_data_chunks()
+
+    # init control vars
+    curr_chunk = 0
+
+    # run km_inst_loose for generating RS
+    km_inst_loose.fit(data_chunks[curr_chunk])
+    print(km_inst_loose.n_iter_)
 
 
 if __name__ == '__main__':
