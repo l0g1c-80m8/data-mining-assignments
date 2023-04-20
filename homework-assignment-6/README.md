@@ -44,9 +44,6 @@ Step 12. Merge CS clusters that have a Mahalanobis Distance < 2 𝑑. <br/>
 
 Repeat Steps 7 – 12.  If this is the last run (after the last chunk of data), merge CS clusters with DS clusters that
 have a Mahalanobis Distance < 2 𝑑. <br/>
-At each run, including the initialization step, count and output the number of the discard
-points, the number of the clusters in the CS, the number of the compression points, and the number of
-the points in the retained set.
 
 ## Dataset
 Since the BFR algorithm has a strong assumption that the clusters are normally distributed with
