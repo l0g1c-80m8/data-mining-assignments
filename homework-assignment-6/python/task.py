@@ -228,6 +228,29 @@ def merge_cs_clusters(cs):
         cs.clusters.pop(cluster_2[0])
 
 
+def merge_cs_ds_clusters(cs, ds):
+    while True:
+        min_dist = float('inf')
+        min_pair = (-1, -1)
+        for cluster_1, cluster_2 in product(ds.clusters.items(), cs.clusters.items()):
+            if cluster_1[0] == cluster_2[0] or cluster_1[0] not in ds.clusters or cluster_2[0] not in cs.clusters:
+                continue
+            dist = get_mahalanobis_dist_clusters(cluster_1[1], cluster_2[1])
+            if min_dist > dist:
+                min_dist = dist
+                min_pair = (cluster_1, cluster_2)
+        if min_dist > 2 * sqrt(ds.feature_length):
+            break
+        cluster_1, cluster_2 = min_pair
+        ds.clusters[cluster_1[0]] = (
+            cluster_1[1][0] + cluster_2[1][0],
+            tuple([cluster_1[1][1][idx] + cluster_2[1][1][idx] for idx in range(cs.feature_length)]),
+            tuple([cluster_1[1][2][idx] + cluster_2[1][2][idx] for idx in range(cs.feature_length)]),
+            cluster_1[1][3] + cluster_2[1][3]
+        )
+        cs.clusters.pop(cluster_2[0])
+
+
 def get_clustering_labels(data_point_map, ds, cs, rs):
     label_map = dict()
     cluster_labels_map = dict()
@@ -301,7 +324,7 @@ def main():
         move_to_cs_rs(km_inst, cs, rs, [data_points], 0)
         merge_cs_clusters(cs)
 
-    # finally merge cd with ds if m d < 2d
+    merge_cs_ds_clusters(cs, ds)
 
     intermediate_results.append((
         curr_chunk + 1,
