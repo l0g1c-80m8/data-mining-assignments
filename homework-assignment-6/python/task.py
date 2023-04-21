@@ -154,7 +154,7 @@ def get_km_inst(n_clusters):
     return KMeans(
         n_clusters=n_clusters,
         init='k-means++',
-        n_init='auto',
+        n_init=3,
         max_iter=PARAMS.KM_MAX_ITERS,
         tol=PARAMS.KM_TOL
     )
