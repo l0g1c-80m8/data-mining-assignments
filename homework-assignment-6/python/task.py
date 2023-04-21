@@ -84,7 +84,8 @@ def get_runtime_params():
         KM_MAX_ITERS=300,
         KM_TOL=1e-04,
         SCALE_LARGE=50,
-        SCALE_SMALL=2
+        SCALE_SMALL=2,
+        N_INIT=3
     )
 
 
@@ -154,7 +155,7 @@ def get_km_inst(n_clusters):
     return KMeans(
         n_clusters=n_clusters,
         init='k-means++',
-        n_init=3,
+        n_init=PARAMS.N_INIT,
         max_iter=PARAMS.KM_MAX_ITERS,
         tol=PARAMS.KM_TOL
     )
