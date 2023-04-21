@@ -90,15 +90,12 @@ def get_runtime_params():
 
 def get_data_chunks():
     with open(PARAMS.IN_FILE, 'r') as fh:
-        header = fh.readline().strip()
-
         data_points = sc.textFile(PARAMS.IN_FILE) \
-            .filter(lambda line: line.strip() != header) \
             .map(lambda line: line.split(',')) \
             .map(lambda line: list(map(float, line)))
 
         data_point_map = data_points \
-            .map(lambda record: (record[0], record[2:])) \
+            .map(lambda record: (tuple(record[2:]), int(record[0]))) \
             .collectAsMap()
 
         data = data_points \
@@ -231,13 +228,35 @@ def merge_cs_clusters(cs):
         cs.clusters.pop(cluster_2[0])
 
 
-def write_output_to_file(ir):
+def get_clustering_labels(data_point_map, ds, cs, rs):
+    label_map = dict()
+    cluster_labels_map = dict()
+    for idx, label in enumerate(list(ds.clusters.keys()) + list(cs.clusters.keys())):
+        cluster_labels_map[label] = idx
+
+    for cluster_label, cluster in ds.clusters.items():
+        for data_point in cluster[3]:
+            label_map[data_point_map[tuple(data_point)]] = cluster_labels_map[cluster_label]
+
+    for cluster_label, cluster in cs.clusters.items():
+        for data_point in cluster[3]:
+            label_map[data_point_map[tuple(data_point)]] = cluster_labels_map[cluster_label]
+
+    for data_point in rs.data_points:
+        label_map[data_point_map[tuple(data_point)]] = -1
+
+    return label_map
+
+
+def write_output_to_file(ir, labels):
     with open(PARAMS.OUT_FILE, 'w') as fh:
         fh.write('The intermediate results:\n')
         for result in ir:
             fh.write('Round {}: {}, {}, {}, {}\n'.format(*result))
 
         fh.write('\nThe clustering results:\n')
+        for label in sorted(labels.items(), key=lambda l: l[0]):
+            fh.write('{},{}\n'.format(label[0], label[1]))
 
 
 def main():
@@ -292,7 +311,8 @@ def main():
         len(rs.data_points)
     ))
 
-    write_output_to_file(intermediate_results)
+    cluster_labels = get_clustering_labels(data_point_map, ds, cs, rs)
+    write_output_to_file(intermediate_results, cluster_labels)
 
 
 if __name__ == '__main__':
