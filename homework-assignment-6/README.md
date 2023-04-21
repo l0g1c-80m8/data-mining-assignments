@@ -19,6 +19,8 @@ SUM: the sum of the coordinates of the points
 SUMSQ: the sum of squares of coordinates
 ```
 
+#### Warning: Spaghetti 🍝 Code in this Assignment!
+
 Implementation details of the BFR algorithm: <br/>
 Step 1. Load 20% of the data randomly. <br/>
 Step 2. Run K-Means (e.g., from sklearn) with a large K (e.g., 5 times of the number of the input clusters)
