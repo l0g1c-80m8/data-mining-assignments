@@ -51,7 +51,8 @@ class Cluster:
         self.clusters = defaultdict(lambda: (
             0,
             tuple([0] * self.feature_length),
-            tuple([0] * self.feature_length)
+            tuple([0] * self.feature_length),
+            list()
         ))
 
     def insert(self, data_point, label):
@@ -59,7 +60,8 @@ class Cluster:
         self.clusters[label] = (
             curr_cluster[0] + 1,
             tuple([data_point[i] + curr_cluster[1][i] for i in range(self.feature_length)]),
-            tuple([data_point[i] ** 2 + curr_cluster[2][i] for i in range(self.feature_length)])
+            tuple([data_point[i] ** 2 + curr_cluster[2][i] for i in range(self.feature_length)]),
+            curr_cluster[3] + [data_point]
         )
 
     def insert_all(self, data_points, label):
@@ -224,6 +226,7 @@ def merge_cs_clusters(cs):
             cluster_1[1][0] + cluster_2[1][0],
             tuple([cluster_1[1][1][idx] + cluster_2[1][1][idx] for idx in range(cs.feature_length)]),
             tuple([cluster_1[1][2][idx] + cluster_2[1][2][idx] for idx in range(cs.feature_length)]),
+            cluster_1[1][3] + cluster_2[1][3]
         )
         cs.clusters.pop(cluster_2[0])
 
@@ -273,7 +276,6 @@ def main():
             len(rs.data_points)
         ))
         assign_points(data_chunks, curr_chunk, ds, cs, rs)
-        # run k means on rs to generate cs and rs
         km_inst = get_km_inst(min(PARAMS.N_CLUSTERS * PARAMS.SCALE_SMALL, len(rs.data_points)))
         data_points = list(rs.pop_all_points())
         km_inst.fit(data_points)
