@@ -5,6 +5,13 @@ The goal is to be familiar with the process of clustering in general on distribu
 various distance measurements. The datasets used here is a synthetic dataset generated to meet
 the assumptions of the BFR algorithm.
 
+<!-- TOC -->
+* [Homework 6: Clustering](#homework-6-clustering)
+  * [Task](#task)
+      * [Warning: Spaghetti 🍝 Code in this Assignment!](#warning-spaghetti--code-in-this-assignment)
+  * [Dataset](#dataset)
+<!-- TOC -->
+
 ## Task
 
 The task is to implement Bradley-Fayyad-Reina (BFR) algorithm to cluster the data contained
