@@ -282,6 +282,14 @@ def main():
 
     # finally merge cd with ds if m d < 2d
 
+    intermediate_results.append((
+        curr_chunk + 1,
+        sum(map(lambda c: c[0], ds.clusters.values())),
+        len(cs.clusters),
+        sum(map(lambda c: c[0], cs.clusters.values())),
+        len(rs.data_points)
+    ))
+
     write_output_to_file(intermediate_results)
 
 
