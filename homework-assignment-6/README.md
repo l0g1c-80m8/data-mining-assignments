@@ -8,8 +8,8 @@ the assumptions of the BFR algorithm.
 <!-- TOC -->
 * [Homework 6: Clustering](#homework-6-clustering)
   * [Task](#task)
-      * [Warning: Spaghetti 🍝 Code in this Assignment!](#warning-spaghetti--code-in-this-assignment)
   * [Dataset](#dataset)
+      * [Warning: Spaghetti 🍝 Code in this Assignment!](#warning-spaghetti--code-in-this-assignment)
 <!-- TOC -->
 
 ## Task
