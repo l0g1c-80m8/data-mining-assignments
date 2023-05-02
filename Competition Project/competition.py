@@ -1,8 +1,9 @@
+import numpy as np
+
 from argparse import Namespace
 from collections import defaultdict
 from datetime import datetime
 from json import loads
-from numpy import nan
 from math import sqrt
 from optuna import create_study
 from os import environ
@@ -46,14 +47,17 @@ def parse_args():
 def get_business_feature_col_extractors():
     def _attribute_extractor(business_obj):
         if business_obj['attributes'] is None:
-            return tuple([nan] * len(PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES))
+            return tuple([None] * (
+                    len(PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES) +
+                    len(PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES)
+            ))
         return tuple(map(
             lambda attr: bool(business_obj['attributes'][attr]) if attr in business_obj['attributes'] else None,
             PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES
         )) + (
-            business_obj['attributes'].get(PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[0], nan),
-            business_obj['attributes'].get(PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[1], nan),
-            business_obj['attributes'].get(PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[2], nan),
+            business_obj['attributes'].get(PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[0], None),
+            business_obj['attributes'].get(PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[1], None),
+            business_obj['attributes'].get(PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[2], None),
         )
 
     return {
@@ -228,14 +232,13 @@ def main():
         PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES +
         PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES
     )
-    print('train dataset encoding')
+    train_df = train_df.fillna(value=np.nan)
     train_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[0]] = \
         LabelEncoder().fit_transform(train_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[0]])
     train_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[1]] = \
         LabelEncoder().fit_transform(train_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[1]])
     train_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[2]] = \
         LabelEncoder().fit_transform(train_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[2]])
-    print('train dataset done')
 
     # create test dataset
     test_set = parse_test_set() \
@@ -250,14 +253,13 @@ def main():
         PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES +
         PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES
     )
-    print('test dataset encoding')
+    test_df = test_df.fillna(value=np.nan)
     test_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[0]] = \
         LabelEncoder().fit_transform(test_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[0]])
     test_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[1]] = \
         LabelEncoder().fit_transform(test_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[1]])
     test_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[2]] = \
         LabelEncoder().fit_transform(test_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[2]])
-    print('test dataset done')
 
     # format data and write to file
     # write_results_to_file(map(
@@ -269,7 +271,7 @@ def main():
         train_df[PARAMS_NS.RECORD_COLS[-1:]].values
     x_test = test_df.drop(PARAMS_NS.RECORD_COLS[: -1], axis=1).values
     validations = parse_val_set().collectAsMap()
-    print('create study')
+
     study = create_study(direction='minimize')
     study.optimize(_objective, n_trials=100)
     log_results(study)
