@@ -9,9 +9,10 @@ from optuna import create_study
 from os import environ
 from pandas import DataFrame, set_option
 from pyspark import SparkConf, SparkContext
+from sklearn.metrics import f1_score, classification_report, confusion_matrix
 from sklearn.preprocessing import LabelEncoder
 from sys import argv, executable
-from xgboost import XGBRegressor
+from xgboost import XGBClassifier
 
 set_option('display.max_columns', None)
 
@@ -170,7 +171,10 @@ def evaluate(validations, predictions):
     rmse = sqrt(rmse / sum(distribution.values()))
 
     # print(distribution, sum(distribution.values()))
-    return rmse
+    print(classification_report(list(validations.values()), list(predictions.values())))
+    print(confusion_matrix(list(validations.values()), list(predictions.values())))
+    print('RMSE: {}'.format(rmse))
+    return f1_score(list(validations.values()), list(predictions.values()), average='weighted')
 
 
 def log_results(study):
@@ -186,24 +190,23 @@ def log_results(study):
 def main():
     def _objective(trial):
         hyper_params = {
-            'max_depth': trial.suggest_int('max_depth', 1, 10),
-            'learning_rate': trial.suggest_float('learning_rate', 0.01, 1.0, log=True),
-            'n_estimators': trial.suggest_int('n_estimators', 5, 500),
-            'min_child_weight': trial.suggest_int('min_child_weight', 1, 10),
-            'gamma': trial.suggest_float('gamma', 1e-8, 1.0, log=True),
-            'subsample': trial.suggest_float('subsample', 0.01, 1.0, log=True),
-            'colsample_bytree': trial.suggest_float('colsample_bytree', 0.01, 1.0, log=True),
-            'reg_alpha': trial.suggest_float('reg_alpha', 1e-8, 1.0, log=True),
-            'reg_lambda': trial.suggest_float('reg_lambda', 1e-8, 1.0, log=True),
-            'eval_metric': 'mlogloss',
-            'use_label_encoder': False,
+            'max_depth': trial.suggest_int('max_depth', 10, 10),
+            'learning_rate': trial.suggest_float('learning_rate', 0.1, 0.1, log=True),
+            'n_estimators': trial.suggest_int('n_estimators', 100, 100),
+            # 'min_child_weight': trial.suggest_int('min_child_weight', 1, 10),
+            # 'gamma': trial.suggest_float('gamma', 1e-8, 1.0, log=True),
+            # 'subsample': trial.suggest_float('subsample', 0.01, 1.0, log=True),
+            # 'colsample_bytree': trial.suggest_float('colsample_bytree', 0.01, 1.0, log=True),
+            # 'reg_alpha': trial.suggest_float('reg_alpha', 1e-8, 1.0, log=True),
+            # 'reg_lambda': trial.suggest_float('reg_lambda', 1e-8, 1.0, log=True),
+            # 'eval_metric': 'rmse',
             'tree_method': 'gpu_hist',
             'booster': 'gbtree',
             'verbosity': 0
         }
 
         # Fit the model
-        optuna_model = XGBRegressor(**hyper_params)
+        optuna_model = XGBClassifier(**hyper_params)
         optuna_model.fit(x_train, y_train)
 
         # Make predictions
@@ -233,12 +236,10 @@ def main():
         PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES
     )
     train_df = train_df.fillna(value=np.nan)
-    train_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[0]] = \
-        LabelEncoder().fit_transform(train_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[0]])
-    train_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[1]] = \
-        LabelEncoder().fit_transform(train_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[1]])
-    train_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[2]] = \
-        LabelEncoder().fit_transform(train_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[2]])
+    for col_name in PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES:
+        train_df[col_name] = LabelEncoder().fit_transform(train_df[col_name])
+    for col_name in PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES:
+        train_df[col_name] = LabelEncoder().fit_transform(train_df[col_name])
 
     # create test dataset
     test_set = parse_test_set() \
@@ -254,12 +255,10 @@ def main():
         PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES
     )
     test_df = test_df.fillna(value=np.nan)
-    test_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[0]] = \
-        LabelEncoder().fit_transform(test_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[0]])
-    test_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[1]] = \
-        LabelEncoder().fit_transform(test_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[1]])
-    test_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[2]] = \
-        LabelEncoder().fit_transform(test_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[2]])
+    for col_name in PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES:
+        test_df[col_name] = LabelEncoder().fit_transform(test_df[col_name])
+    for col_name in PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES:
+        test_df[col_name] = LabelEncoder().fit_transform(test_df[col_name])
 
     # format data and write to file
     # write_results_to_file(map(
@@ -268,12 +267,12 @@ def main():
     # ))
 
     x_train, y_train = train_df.drop(PARAMS_NS.RECORD_COLS, axis=1).values, \
-        train_df[PARAMS_NS.RECORD_COLS[-1:]].values
+        train_df[PARAMS_NS.RECORD_COLS[-1:]].values.ravel()
     x_test = test_df.drop(PARAMS_NS.RECORD_COLS[: -1], axis=1).values
     validations = parse_val_set().collectAsMap()
 
-    study = create_study(direction='minimize')
-    study.optimize(_objective, n_trials=100)
+    study = create_study(direction='maximize')
+    study.optimize(_objective, n_trials=1)
     log_results(study)
 
 
