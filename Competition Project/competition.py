@@ -1,9 +1,12 @@
 import json
 import pandas as pd
 import os
+import optuna
 import sys
 
+from collections import defaultdict
 from datetime import datetime
+from math import sqrt
 from pyspark import SparkConf, SparkContext
 from xgboost import XGBClassifier
 
@@ -50,6 +53,16 @@ def parse_test_set():
         .map(lambda record: (record[0], record[1]))
 
 
+def parse_val_set():
+    with open(params['test_file'], 'r') as fh:
+        header = fh.readline().strip()
+
+    return sc.textFile(params['test_file']) \
+        .filter(lambda line: line.strip() != header) \
+        .map(lambda line: line.split(',')) \
+        .map(lambda record: ((record[0], record[1]), float(record[2])))
+
+
 def parse_user_set():
     filename = '{}/{}'.format(params['in_dir'], params['user'])
 
@@ -92,7 +105,76 @@ def fill_features(record, user_data, business_data):
     return record + user_features + business_features
 
 
+def evaluate(validations, predictions):
+    rmse = 0.0
+    distribution = defaultdict(int)
+    for key in predictions.keys():
+        diff = abs(predictions[key] - validations[key])
+        if diff < 0:
+            distribution['<0'] += 1
+        elif diff < 1:
+            distribution['<1'] += 1
+        elif diff < 2:
+            distribution['<2'] += 1
+        elif diff < 3:
+            distribution['<3'] += 1
+        elif diff < 4:
+            distribution['<4'] += 1
+        elif diff <= 5:
+            distribution['<=5'] += 1
+        else:
+            distribution['>5'] += 1
+
+        rmse += pow(diff, 2)
+
+    rmse = sqrt(rmse / sum(distribution.values()))
+
+    # print(distribution, sum(distribution.values()))
+    return rmse
+
+
+def log_results(study):
+    print('Number of finished trials: {}'.format(len(study.trials)))
+    print('Best trial:')
+    trial = study.best_trial
+
+    print('  Value: {}'.format(trial.value))
+    print('  Params: ')
+
+    for key, value in trial.params.items():
+        print('    {}: {}'.format(key, value))
+
+
 def main():
+    def objective(trial):
+        hyper_params = {
+            'max_depth': trial.suggest_int('max_depth', 1, 9),
+            'learning_rate': trial.suggest_loguniform('learning_rate', 0.01, 1.0),
+            'n_estimators': trial.suggest_int('n_estimators', 50, 500),
+            'min_child_weight': trial.suggest_int('min_child_weight', 1, 10),
+            'gamma': trial.suggest_loguniform('gamma', 1e-8, 1.0),
+            'subsample': trial.suggest_loguniform('subsample', 0.01, 1.0),
+            'colsample_bytree': trial.suggest_loguniform('colsample_bytree', 0.01, 1.0),
+            'reg_alpha': trial.suggest_loguniform('reg_alpha', 1e-8, 1.0),
+            'reg_lambda': trial.suggest_loguniform('reg_lambda', 1e-8, 1.0),
+            'eval_metric': 'mlogloss',
+            'use_label_encoder': False
+        }
+
+        # Fit the model
+        optuna_model = XGBClassifier(**hyper_params)
+        optuna_model.fit(x_train, y_train)
+
+        # Make predictions
+        y_pred = optuna_model.predict(x_test)
+
+        # Evaluate predictions
+        accuracy = evaluate(validations, dict(map(
+            lambda indexed_pair: ((indexed_pair[1][0], indexed_pair[1][1]), y_pred[indexed_pair[0]]),
+            enumerate(test_set)
+        )))
+        return accuracy
+
     # create feature data
     user_data = parse_user_set().collectAsMap()
     business_data = parse_business_set().collectAsMap()
@@ -114,18 +196,21 @@ def main():
                                'business_feature_cols']
                            )
 
-    # define the regressor model
-    model = XGBClassifier(n_estimators=1, learning_rate=0.1, max_depth=10, booster='gbtree', verbosity=0)
-    # train the model
-    model.fit(train_df.drop(params['record_cols'], axis=1).values, train_df[params['record_cols'][-1:]].values.ravel())
-    # generate predictions
-    predictions = model.predict(test_df.drop(params['record_cols'][: -1], axis=1).values)
-
     # format data and write to file
-    write_results_to_file(map(
-        lambda indexed_pair: (indexed_pair[1][0], indexed_pair[1][1], predictions[indexed_pair[0]]),
-        enumerate(test_set)
-    ))
+    # write_results_to_file(map(
+    #     lambda indexed_pair: (indexed_pair[1][0], indexed_pair[1][1], predictions[indexed_pair[0]]),
+    #     enumerate(test_set)
+    # ))
+
+    x_train, y_train = train_df.drop(params['record_cols'], axis=1).values, \
+        train_df[params['record_cols'][-1:]].values.ravel()
+    x_test = test_df.drop(params['record_cols'][: -1], axis=1).values
+    validations = parse_val_set().collectAsMap()
+
+    study = optuna.create_study(direction='minimize')
+    study.optimize(objective, n_trials=1)
+
+    log_results(study)
 
 
 if __name__ == '__main__':
