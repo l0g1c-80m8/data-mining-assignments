@@ -1,12 +1,12 @@
-import json
-import pandas as pd
 import os
-import optuna
 import sys
 
 from collections import defaultdict
 from datetime import datetime
+from json import loads
 from math import sqrt
+from optuna import create_study
+from pandas import DataFrame
 from pyspark import SparkConf, SparkContext
 from xgboost import XGBRegressor
 
@@ -33,7 +33,7 @@ def parse_args():
 
 
 def parse_train_set():
-    filename = '{}/{}'.format(params['in_dir'], params['train'])
+    filename = '{}/{}'.format(PARAMS['in_dir'], PARAMS['train'])
     with open(filename, 'r') as fh:
         header = fh.readline().strip()
 
@@ -44,64 +44,64 @@ def parse_train_set():
 
 
 def parse_test_set():
-    with open(params['test_file'], 'r') as fh:
+    with open(PARAMS['test_file'], 'r') as fh:
         header = fh.readline().strip()
 
-    return sc.textFile(params['test_file']) \
+    return sc.textFile(PARAMS['test_file']) \
         .filter(lambda line: line.strip() != header) \
         .map(lambda line: line.split(',')) \
         .map(lambda record: (record[0], record[1]))
 
 
 def parse_val_set():
-    with open(params['test_file'], 'r') as fh:
+    with open(PARAMS['test_file'], 'r') as fh:
         header = fh.readline().strip()
 
-    return sc.textFile(params['test_file']) \
+    return sc.textFile(PARAMS['test_file']) \
         .filter(lambda line: line.strip() != header) \
         .map(lambda line: line.split(',')) \
         .map(lambda record: ((record[0], record[1]), float(record[2])))
 
 
 def parse_user_set():
-    filename = '{}/{}'.format(params['in_dir'], params['user'])
+    filename = '{}/{}'.format(PARAMS['in_dir'], PARAMS['user'])
 
     return sc.textFile(filename) \
-        .map(lambda json_string: json.loads(json_string)) \
-        .map(lambda user_obj: (user_obj[params['record_cols'][0]],
+        .map(lambda json_string: loads(json_string)) \
+        .map(lambda user_obj: (user_obj[PARAMS['record_cols'][0]],
                                tuple(map(
                                    lambda col_name: user_obj[col_name],
-                                   params['user_feature_cols']
+                                   PARAMS['user_feature_cols']
                                ))
                                )
              )
 
 
 def parse_business_set():
-    filename = '{}/{}'.format(params['in_dir'], params['business'])
+    filename = '{}/{}'.format(PARAMS['in_dir'], PARAMS['business'])
 
     return sc.textFile(filename) \
-        .map(lambda json_string: json.loads(json_string)) \
-        .map(lambda business_obj: (business_obj[params['record_cols'][1]],
+        .map(lambda json_string: loads(json_string)) \
+        .map(lambda business_obj: (business_obj[PARAMS['record_cols'][1]],
                                    tuple(map(
                                        lambda col_name: business_obj[col_name.replace('business_', '')],
-                                       params['business_feature_cols']
+                                       PARAMS['business_feature_cols']
                                    ))
                                    )
              )
 
 
 def write_results_to_file(data):
-    file_header = '{}\n'.format(', '.join(params['record_cols']))
-    with open(params['out_file'], 'w') as fh:
+    file_header = '{}\n'.format(', '.join(PARAMS['record_cols']))
+    with open(PARAMS['out_file'], 'w') as fh:
         fh.write(file_header)
         for record in data:
             fh.write('{}\n'.format(','.join(map(lambda item: str(item), list(record)))))
 
 
 def fill_features(record, user_data, business_data):
-    user_features = user_data.get(record[0], tuple([0] * len(params['user_feature_cols'])))
-    business_features = business_data.get(record[1], tuple([0] * len(params['business_feature_cols'])))
+    user_features = user_data.get(record[0], tuple([0] * len(PARAMS['user_feature_cols'])))
+    business_features = business_data.get(record[1], tuple([0] * len(PARAMS['business_feature_cols'])))
     return record + user_features + business_features
 
 
@@ -141,7 +141,7 @@ def log_results(study):
     print('  Value: {}'.format(trial.value))
     print('  Params: ')
 
-    for key, value in trial.params.items():
+    for key, value in trial.PARAMS.items():
         print('    {}: {}'.format(key, value))
 
 
@@ -183,19 +183,19 @@ def main():
     business_data = parse_business_set().collectAsMap()
 
     # create training dataset
-    train_df = pd.DataFrame(
+    train_df = DataFrame(
         parse_train_set()
         .map(lambda record: fill_features(record, user_data, business_data))
         .collect(),
-        columns=params['record_cols'] + params['user_feature_cols'] + params['business_feature_cols']
+        columns=PARAMS['record_cols'] + PARAMS['user_feature_cols'] + PARAMS['business_feature_cols']
     )
 
     # create test dataset
     test_set = parse_test_set() \
         .map(lambda record: fill_features(record, user_data, business_data)) \
         .collect()
-    test_df = pd.DataFrame(test_set,
-                           columns=params['record_cols'][: -1] + params['user_feature_cols'] + params[
+    test_df = DataFrame(test_set,
+                           columns=PARAMS['record_cols'][: -1] + PARAMS['user_feature_cols'] + PARAMS[
                                'business_feature_cols']
                            )
 
@@ -205,13 +205,13 @@ def main():
     #     enumerate(test_set)
     # ))
 
-    x_train, y_train = train_df.drop(params['record_cols'], axis=1).values, \
-        train_df[params['record_cols'][-1:]].values
-    x_test = test_df.drop(params['record_cols'][: -1], axis=1).values
+    x_train, y_train = train_df.drop(PARAMS['record_cols'], axis=1).values, \
+        train_df[PARAMS['record_cols'][-1:]].values
+    x_test = test_df.drop(PARAMS['record_cols'][: -1], axis=1).values
     validations = parse_val_set().collectAsMap()
 
-    study = optuna.create_study(direction='minimize')
-    study.optimize(_objective, n_trials=300)
+    study = create_study(direction='minimize')
+    study.optimize(_objective, n_trials=10)
 
     log_results(study)
 
@@ -222,10 +222,10 @@ if __name__ == '__main__':
     os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
 
     # initialize program parameters
-    params = parse_args()
+    PARAMS = parse_args()
 
     # create spark context
-    sc = SparkContext(conf=SparkConf().setAppName(params['app_name']).setMaster("local[*]"))
+    sc = SparkContext(conf=SparkConf().setAppName(PARAMS['app_name']).setMaster("local[*]"))
     sc.setLogLevel('ERROR')
 
     # run prediction
