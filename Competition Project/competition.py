@@ -146,7 +146,7 @@ def log_results(study):
 
 
 def main():
-    def objective(trial):
+    def _objective(trial):
         hyper_params = {
             'max_depth': trial.suggest_int('max_depth', 1, 10),
             'learning_rate': trial.suggest_float('learning_rate', 0.01, 1.0, log=True),
@@ -208,7 +208,7 @@ def main():
     validations = parse_val_set().collectAsMap()
 
     study = optuna.create_study(direction='minimize')
-    study.optimize(objective, n_trials=10)
+    study.optimize(_objective, n_trials=10)
 
     log_results(study)
 
