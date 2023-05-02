@@ -8,7 +8,7 @@ from collections import defaultdict
 from datetime import datetime
 from math import sqrt
 from pyspark import SparkConf, SparkContext
-from xgboost import XGBClassifier
+from xgboost import XGBRegressor
 
 
 def parse_args():
@@ -158,11 +158,14 @@ def main():
             'reg_alpha': trial.suggest_float('reg_alpha', 1e-8, 1.0, log=True),
             'reg_lambda': trial.suggest_float('reg_lambda', 1e-8, 1.0, log=True),
             'eval_metric': 'mlogloss',
-            'use_label_encoder': False
+            'use_label_encoder': False,
+            'tree_method': 'gpu_hist',
+            'booster': 'gbtree',
+            'verbosity': 0
         }
 
         # Fit the model
-        optuna_model = XGBClassifier(**hyper_params)
+        optuna_model = XGBRegressor(**hyper_params)
         optuna_model.fit(x_train, y_train)
 
         # Make predictions
@@ -203,12 +206,12 @@ def main():
     # ))
 
     x_train, y_train = train_df.drop(params['record_cols'], axis=1).values, \
-        train_df[params['record_cols'][-1:]].values.ravel()
+        train_df[params['record_cols'][-1:]].values
     x_test = test_df.drop(params['record_cols'][: -1], axis=1).values
     validations = parse_val_set().collectAsMap()
 
     study = optuna.create_study(direction='minimize')
-    study.optimize(_objective, n_trials=10)
+    study.optimize(_objective, n_trials=300)
 
     log_results(study)
 
