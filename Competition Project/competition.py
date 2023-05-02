@@ -33,8 +33,14 @@ def parse_args():
         USER_FILE='user.json',
         BUSINESS_FILE='business.json',
         RECORD_COLS=['user_id', 'business_id', 'rating'],
-        USER_FEATURE_COLS=['review_count', 'useful', 'funny', 'cool', 'fans', 'average_stars'],
-        BUSINESS_FEATURE_COLS=['business_stars', 'business_review_count', 'business_attributes'],
+        USER_FEATURE_COLS=['review_count', 'useful', 'funny', 'cool', 'fans', 'average_stars', 'compliment_hot',
+                           'compliment_more', 'compliment_profile', 'compliment_cute', 'compliment_list',
+                           'compliment_note', 'compliment_plain', 'compliment_cool', 'compliment_funny',
+                           'compliment_writer', 'compliment_photos'
+                           ],
+        BUSINESS_FEATURE_COLS=['business_stars', 'business_review_count', 'latitude', 'longitude',
+                               'business_attributes'
+                               ],
         BUSINESS_BOOL_FEATURE_ATTRIBUTES=['BikeParking', 'BusinessAcceptsCreditCards', 'GoodForKids', 'HasTV',
                                           'OutdoorSeating', 'RestaurantsDelivery', 'RestaurantsGoodForGroups',
                                           'RestaurantsReservations', 'RestaurantsTakeOut'
@@ -62,9 +68,11 @@ def get_business_feature_col_extractors():
         )
 
     return {
-        'business_stars': lambda business_obj: (int(business_obj['stars']),),
-        'business_review_count': lambda business_obj: (int(business_obj['review_count']),),
+        'business_stars': lambda business_obj: (int(business_obj['stars']), ),
+        'business_review_count': lambda business_obj: (int(business_obj['review_count']), ),
         'business_attributes': _attribute_extractor,
+        'latitude': lambda business_obj: (business_obj.get('latitude', None), ),
+        'longitude': lambda business_obj: (business_obj.get('longitude', None), ),
     }
 
 
@@ -116,7 +124,7 @@ def parse_user_set():
 def parse_business_set():
     def _business_data_parser(business_obj):
         result = tuple()
-        for col_name in PARAMS_NS.BUSINESS_FEATURE_COLS:
+        for col_name in PARAMS_NS.BUSINESS_FEATURE_COLS[: -1]:
             result += BUSINESS_FEATURE_EXTRACTORS[col_name](business_obj)
         return result
 
