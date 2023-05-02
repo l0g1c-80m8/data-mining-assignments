@@ -148,15 +148,15 @@ def log_results(study):
 def main():
     def objective(trial):
         hyper_params = {
-            'max_depth': trial.suggest_int('max_depth', 1, 9),
-            'learning_rate': trial.suggest_loguniform('learning_rate', 0.01, 1.0),
-            'n_estimators': trial.suggest_int('n_estimators', 50, 500),
+            'max_depth': trial.suggest_int('max_depth', 1, 10),
+            'learning_rate': trial.suggest_float('learning_rate', 0.01, 1.0, log=True),
+            'n_estimators': trial.suggest_int('n_estimators', 5, 500),
             'min_child_weight': trial.suggest_int('min_child_weight', 1, 10),
-            'gamma': trial.suggest_loguniform('gamma', 1e-8, 1.0),
-            'subsample': trial.suggest_loguniform('subsample', 0.01, 1.0),
-            'colsample_bytree': trial.suggest_loguniform('colsample_bytree', 0.01, 1.0),
-            'reg_alpha': trial.suggest_loguniform('reg_alpha', 1e-8, 1.0),
-            'reg_lambda': trial.suggest_loguniform('reg_lambda', 1e-8, 1.0),
+            'gamma': trial.suggest_float('gamma', 1e-8, 1.0, log=True),
+            'subsample': trial.suggest_float('subsample', 0.01, 1.0, log=True),
+            'colsample_bytree': trial.suggest_float('colsample_bytree', 0.01, 1.0, log=True),
+            'reg_alpha': trial.suggest_float('reg_alpha', 1e-8, 1.0, log=True),
+            'reg_lambda': trial.suggest_float('reg_lambda', 1e-8, 1.0, log=True),
             'eval_metric': 'mlogloss',
             'use_label_encoder': False
         }
@@ -208,7 +208,7 @@ def main():
     validations = parse_val_set().collectAsMap()
 
     study = optuna.create_study(direction='minimize')
-    study.optimize(objective, n_trials=1)
+    study.optimize(objective, n_trials=10)
 
     log_results(study)
 
