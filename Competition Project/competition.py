@@ -2,13 +2,17 @@ from argparse import Namespace
 from collections import defaultdict
 from datetime import datetime
 from json import loads
+from numpy import nan
 from math import sqrt
 from optuna import create_study
 from os import environ
-from pandas import DataFrame
+from pandas import DataFrame, set_option
 from pyspark import SparkConf, SparkContext
+from sklearn.preprocessing import LabelEncoder
 from sys import argv, executable
 from xgboost import XGBRegressor
+
+set_option('display.max_columns', None)
 
 
 def parse_args():
@@ -28,8 +32,35 @@ def parse_args():
         BUSINESS_FILE='business.json',
         RECORD_COLS=['user_id', 'business_id', 'rating'],
         USER_FEATURE_COLS=['review_count', 'useful', 'funny', 'cool', 'fans', 'average_stars'],
-        BUSINESS_FEATURE_COLS=['business_stars', 'business_review_count'],
+        BUSINESS_FEATURE_COLS=['business_stars', 'business_review_count', 'business_attributes'],
+        BUSINESS_BOOL_FEATURE_ATTRIBUTES=['BikeParking', 'BusinessAcceptsCreditCards', 'GoodForKids', 'HasTV',
+                                          'OutdoorSeating', 'RestaurantsDelivery', 'RestaurantsGoodForGroups',
+                                          'RestaurantsReservations', 'RestaurantsTakeOut'
+                                          ],
+        BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES=['NoiseLevel', 'RestaurantsAttire',
+                                                'RestaurantsPriceRange2'
+                                                ]
     )
+
+
+def get_business_feature_col_extractors():
+    def _attribute_extractor(business_obj):
+        if business_obj['attributes'] is None:
+            return tuple([nan] * len(PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES))
+        return tuple(map(
+            lambda attr: bool(business_obj['attributes'][attr]) if attr in business_obj['attributes'] else None,
+            PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES
+        )) + (
+            business_obj['attributes'].get(PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[0], nan),
+            business_obj['attributes'].get(PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[1], nan),
+            business_obj['attributes'].get(PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[2], nan),
+        )
+
+    return {
+        'business_stars': lambda business_obj: (int(business_obj['stars']),),
+        'business_review_count': lambda business_obj: (int(business_obj['review_count']),),
+        'business_attributes': _attribute_extractor,
+    }
 
 
 def parse_train_set():
@@ -78,17 +109,16 @@ def parse_user_set():
 
 
 def parse_business_set():
-    filename = '{}/{}'.format(PARAMS_NS.IN_DIR, PARAMS_NS.BUSINESS_FILE)
+    def _business_data_parser(business_obj):
+        result = tuple()
+        for col_name in PARAMS_NS.BUSINESS_FEATURE_COLS:
+            result += BUSINESS_FEATURE_EXTRACTORS[col_name](business_obj)
+        return result
 
+    filename = '{}/{}'.format(PARAMS_NS.IN_DIR, PARAMS_NS.BUSINESS_FILE)
     return sc.textFile(filename) \
         .map(lambda json_string: loads(json_string)) \
-        .map(lambda business_obj: (business_obj[PARAMS_NS.RECORD_COLS[1]],
-                                   tuple(map(
-                                       lambda col_name: business_obj[col_name.replace('business_', '')],
-                                       PARAMS_NS.BUSINESS_FEATURE_COLS
-                                   ))
-                                   )
-             )
+        .map(lambda business_obj: (business_obj[PARAMS_NS.RECORD_COLS[1]], _business_data_parser(business_obj)))
 
 
 def write_results_to_file(data):
@@ -101,7 +131,13 @@ def write_results_to_file(data):
 
 def fill_features(record, user_data, business_data):
     user_features = user_data.get(record[0], tuple([0] * len(PARAMS_NS.USER_FEATURE_COLS)))
-    business_features = business_data.get(record[1], tuple([0] * len(PARAMS_NS.BUSINESS_FEATURE_COLS)))
+    business_features = business_data.get(
+        record[1],
+        tuple([0] * (
+                    len(PARAMS_NS.BUSINESS_FEATURE_COLS[: -1]) +
+                    len(PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES) +
+                    len(PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES)
+        )))
     return record + user_features + business_features
 
 
@@ -185,16 +221,43 @@ def main():
         parse_train_set()
         .map(lambda record: fill_features(record, user_data, business_data))
         .collect(),
-        columns=PARAMS_NS.RECORD_COLS + PARAMS_NS.USER_FEATURE_COLS + PARAMS_NS.BUSINESS_FEATURE_COLS
+        columns=
+        PARAMS_NS.RECORD_COLS +
+        PARAMS_NS.USER_FEATURE_COLS +
+        PARAMS_NS.BUSINESS_FEATURE_COLS[: -1] +
+        PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES +
+        PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES
     )
+    print('train dataset encoding')
+    train_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[0]] = \
+        LabelEncoder().fit_transform(train_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[0]])
+    train_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[1]] = \
+        LabelEncoder().fit_transform(train_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[1]])
+    train_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[2]] = \
+        LabelEncoder().fit_transform(train_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[2]])
+    print('train dataset done')
 
     # create test dataset
     test_set = parse_test_set() \
         .map(lambda record: fill_features(record, user_data, business_data)) \
         .collect()
-    test_df = DataFrame(test_set,
-                        columns=PARAMS_NS.RECORD_COLS[: -1] + PARAMS_NS.USER_FEATURE_COLS + PARAMS_NS.BUSINESS_FEATURE_COLS
-                        )
+    test_df = DataFrame(
+        test_set,
+        columns=
+        PARAMS_NS.RECORD_COLS[: -1] +
+        PARAMS_NS.USER_FEATURE_COLS +
+        PARAMS_NS.BUSINESS_FEATURE_COLS[: -1] +
+        PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES +
+        PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES
+    )
+    print('test dataset encoding')
+    test_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[0]] = \
+        LabelEncoder().fit_transform(test_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[0]])
+    test_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[1]] = \
+        LabelEncoder().fit_transform(test_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[1]])
+    test_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[2]] = \
+        LabelEncoder().fit_transform(test_df[PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[2]])
+    print('test dataset done')
 
     # format data and write to file
     # write_results_to_file(map(
@@ -206,9 +269,9 @@ def main():
         train_df[PARAMS_NS.RECORD_COLS[-1:]].values
     x_test = test_df.drop(PARAMS_NS.RECORD_COLS[: -1], axis=1).values
     validations = parse_val_set().collectAsMap()
-
+    print('create study')
     study = create_study(direction='minimize')
-    study.optimize(_objective, n_trials=1)
+    study.optimize(_objective, n_trials=100)
     log_results(study)
 
 
@@ -219,6 +282,7 @@ if __name__ == '__main__':
 
     # initialize program parameters
     PARAMS_NS = parse_args()
+    BUSINESS_FEATURE_EXTRACTORS = get_business_feature_col_extractors()
 
     # create spark context
     sc = SparkContext(conf=SparkConf().setAppName(PARAMS_NS.APP_NAME).setMaster("local[*]"))
