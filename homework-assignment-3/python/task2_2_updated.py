@@ -187,13 +187,13 @@ def main():
     # define the regressor model
     model = xgb.XGBRegressor(
         min_child_weight=2,
-        n_estimators=130,
-        learning_rate=0.1,
+        n_estimators=135,
+        learning_rate=0.11,
         max_depth=6,
         booster='gbtree',
         verbosity=0,
-        subsample=0.85,
-        colsample_bytree=0.5
+        subsample=0.9,
+        colsample_bytree=0.9
     )
     # model = xgb.XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=10, booster='gbtree', verbosity=0)
     # train the model
