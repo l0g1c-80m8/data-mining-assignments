@@ -37,7 +37,7 @@ def parse_args():
                            'compliment_note', 'compliment_plain', 'compliment_cool', 'compliment_funny',
                            'compliment_writer', 'compliment_photos'
                            ],
-        BUSINESS_FEATURE_COLS=['business_stars', 'business_review_count', 'latitude', 'longitude',
+        BUSINESS_FEATURE_COLS=['business_stars', 'business_review_count', 'city',
                                'business_attributes'
                                ],
         BUSINESS_BOOL_FEATURE_ATTRIBUTES=['BikeParking', 'BusinessAcceptsCreditCards', 'GoodForKids', 'HasTV',
@@ -72,6 +72,7 @@ def get_business_feature_col_extractors():
         'business_attributes': _attribute_extractor,
         'latitude': lambda business_obj: (business_obj.get('latitude', None), ),
         'longitude': lambda business_obj: (business_obj.get('longitude', None), ),
+        'city': lambda business_obj: (business_obj.get('city', None), ),
     }
 
 
@@ -93,7 +94,7 @@ def parse_test_set():
     return sc.textFile(PARAMS_NS.TEST_FILE) \
         .filter(lambda line: line.strip() != header) \
         .map(lambda line: line.split(',')) \
-        .map(lambda record: (record[0], record[1]))
+        .map(lambda record: (record[0], record[1], 0))
 
 
 def parse_val_set():
@@ -240,6 +241,7 @@ def main():
         PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES
     )
     train_df = train_df.fillna(value=np.nan)
+    train_df['city'] = LabelEncoder().fit_transform(train_df['city'])
     for col_name in PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES:
         train_df[col_name] = LabelEncoder().fit_transform(train_df[col_name])
     for col_name in PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES:
@@ -252,13 +254,14 @@ def main():
     test_df = DataFrame(
         test_set,
         columns=
-        PARAMS_NS.RECORD_COLS[: -1] +
+        PARAMS_NS.RECORD_COLS +
         PARAMS_NS.USER_FEATURE_COLS +
         PARAMS_NS.BUSINESS_FEATURE_COLS[: -1] +
         PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES +
         PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES
     )
     test_df = test_df.fillna(value=np.nan)
+    test_df['city'] = LabelEncoder().fit_transform(test_df['city'])
     for col_name in PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES:
         test_df[col_name] = LabelEncoder().fit_transform(test_df[col_name])
     for col_name in PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES:
@@ -272,7 +275,7 @@ def main():
 
     x_train, y_train = train_df.drop(PARAMS_NS.RECORD_COLS, axis=1).values, \
         train_df[PARAMS_NS.RECORD_COLS[-1:]].values
-    x_test = test_df.drop(PARAMS_NS.RECORD_COLS[: -1], axis=1).values
+    x_test = test_df.drop(PARAMS_NS.RECORD_COLS, axis=1).values
     validations = parse_val_set().collectAsMap()
 
     study = create_study(direction='minimize')
