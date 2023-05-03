@@ -9,10 +9,9 @@ from optuna import create_study
 from os import environ
 from pandas import DataFrame, set_option
 from pyspark import SparkConf, SparkContext
-from sklearn.metrics import f1_score, classification_report, confusion_matrix
 from sklearn.preprocessing import LabelEncoder
 from sys import argv, executable
-from xgboost import XGBClassifier
+from xgboost import XGBRegressor
 
 set_option('display.max_columns', None)
 
@@ -124,7 +123,7 @@ def parse_user_set():
 def parse_business_set():
     def _business_data_parser(business_obj):
         result = tuple()
-        for col_name in PARAMS_NS.BUSINESS_FEATURE_COLS[: -1]:
+        for col_name in PARAMS_NS.BUSINESS_FEATURE_COLS:
             result += BUSINESS_FEATURE_EXTRACTORS[col_name](business_obj)
         return result
 
@@ -179,10 +178,7 @@ def evaluate(validations, predictions):
     rmse = sqrt(rmse / sum(distribution.values()))
 
     # print(distribution, sum(distribution.values()))
-    print(classification_report(list(validations.values()), list(predictions.values())))
-    print(confusion_matrix(list(validations.values()), list(predictions.values())))
-    print('RMSE: {}'.format(rmse))
-    return f1_score(list(validations.values()), list(predictions.values()), average='weighted')
+    return rmse
 
 
 def log_results(study):
@@ -214,7 +210,7 @@ def main():
         }
 
         # Fit the model
-        optuna_model = XGBClassifier(**hyper_params)
+        optuna_model = XGBRegressor(**hyper_params)
         optuna_model.fit(x_train, y_train)
 
         # Make predictions
@@ -275,11 +271,11 @@ def main():
     # ))
 
     x_train, y_train = train_df.drop(PARAMS_NS.RECORD_COLS, axis=1).values, \
-        train_df[PARAMS_NS.RECORD_COLS[-1:]].values.ravel()
+        train_df[PARAMS_NS.RECORD_COLS[-1:]].values
     x_test = test_df.drop(PARAMS_NS.RECORD_COLS[: -1], axis=1).values
     validations = parse_val_set().collectAsMap()
 
-    study = create_study(direction='maximize')
+    study = create_study(direction='minimize')
     study.optimize(_objective, n_trials=1)
     log_results(study)
 
