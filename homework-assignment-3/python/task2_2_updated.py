@@ -29,6 +29,7 @@ def parse_args():
     run_time_params['user_feature_cols'] = ['review_count', 'useful', 'funny', 'cool', 'fans', 'average_stars']
     run_time_params['business_feature_cols'] = ['business_stars', 'business_review_count', 'business_is_open',
                                                 'business_city', 'business_latitude', 'business_longitude',
+                                                'business_state'
                                                 ]
     return run_time_params
 
@@ -115,6 +116,8 @@ def parse_business_set():
                     business_obj['attributes'].get('RestaurantsGoodForGroups', None),
                     business_obj['attributes'].get('RestaurantsTableService', None),
                     business_obj['attributes'].get('RestaurantsTakeOut', None),
+                    business_obj['attributes'].get('Caters', None),
+                    business_obj['attributes'].get('WheelchairAccessible', None),
                 )))
             features += (
                 business_obj['attributes'].get('RestaurantsPriceRange2', None),
@@ -154,7 +157,7 @@ def main():
         columns=params['record_cols'] + params['user_feature_cols'] + ['n_friends', 'n_compliments']
                 + params['business_feature_cols']
                 + ['n_cats', 'alcohol', 'delivery', 'kids', 'seating', 'groups', 'table_service', 'takeout',
-                   'price_range']
+                   'caters', 'wheelchair', 'price_range']
     )
     train_df = train_df.fillna(value=np.nan)
 
@@ -167,7 +170,7 @@ def main():
                                    + ['n_friends', 'n_compliments']
                                    + params['business_feature_cols']
                                    + ['n_cats', 'alcohol', 'delivery', 'kids', 'seating', 'groups', 'table_service',
-                                      'takeout', 'price_range']
+                                      'takeout', 'caters', 'wheelchair', 'price_range']
                            )
     test_df = test_df.fillna(value=np.nan)
 
@@ -177,6 +180,12 @@ def main():
     le.classes_ = np.append(le.classes_, '<unknown>')
     train_df['business_city'] = le.transform(train_df['business_city'].astype(str))
     test_df['business_city'] = le.transform(test_df['business_city'].astype(str))
+    le = LabelEncoder()
+    le.fit(train_df['business_state'].astype(str))
+    test_df['business_state'] = test_df['business_state'].map(lambda s: '<unknown>' if s not in le.classes_ else s)
+    le.classes_ = np.append(le.classes_, '<unknown>')
+    train_df['business_state'] = le.transform(train_df['business_state'].astype(str))
+    test_df['business_state'] = le.transform(test_df['business_state'].astype(str))
     le = LabelEncoder()
     le.fit(train_df['price_range'].astype(str))
     test_df['price_range'] = test_df['price_range'].map(lambda s: '<unknown>' if s not in le.classes_ else s)
@@ -193,7 +202,8 @@ def main():
         booster='gbtree',
         verbosity=0,
         subsample=0.9,
-        colsample_bytree=0.9
+        colsample_bytree=0.9,
+        tree_method='gpu_hist'
     )
     # model = xgb.XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=10, booster='gbtree', verbosity=0)
     # train the model
