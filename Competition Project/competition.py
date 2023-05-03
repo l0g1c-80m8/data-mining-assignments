@@ -32,21 +32,13 @@ def parse_args():
         USER_FILE='user.json',
         BUSINESS_FILE='business.json',
         RECORD_COLS=['user_id', 'business_id', 'rating'],
-        USER_FEATURE_COLS=['review_count', 'useful', 'funny', 'cool', 'fans', 'average_stars', 'compliment_hot',
-                           'compliment_more', 'compliment_profile', 'compliment_cute', 'compliment_list',
-                           'compliment_note', 'compliment_plain', 'compliment_cool', 'compliment_funny',
-                           'compliment_writer', 'compliment_photos'
+        USER_FEATURE_COLS=['review_count', 'average_stars'
                            ],
-        BUSINESS_FEATURE_COLS=['business_stars', 'business_review_count', 'city',
+        BUSINESS_FEATURE_COLS=['business_stars', 'business_review_count',
                                'business_attributes'
                                ],
-        BUSINESS_BOOL_FEATURE_ATTRIBUTES=['BikeParking', 'BusinessAcceptsCreditCards', 'GoodForKids', 'HasTV',
-                                          'OutdoorSeating', 'RestaurantsDelivery', 'RestaurantsGoodForGroups',
-                                          'RestaurantsReservations', 'RestaurantsTakeOut'
-                                          ],
-        BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES=['NoiseLevel', 'RestaurantsAttire',
-                                                'RestaurantsPriceRange2'
-                                                ]
+        BUSINESS_BOOL_FEATURE_ATTRIBUTES=[],
+        BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES=[]
     )
 
 
@@ -60,11 +52,10 @@ def get_business_feature_col_extractors():
         return tuple(map(
             lambda attr: bool(business_obj['attributes'][attr]) if attr in business_obj['attributes'] else None,
             PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES
-        )) + (
-            business_obj['attributes'].get(PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[0], None),
-            business_obj['attributes'].get(PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[1], None),
-            business_obj['attributes'].get(PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES[2], None),
-        )
+        )) + tuple(map(
+            lambda attr: business_obj['attributes'].get(attr, None),
+            PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES
+        ))
 
     return {
         'business_stars': lambda business_obj: (int(business_obj['stars']), ),
@@ -241,11 +232,6 @@ def main():
         PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES
     )
     train_df = train_df.fillna(value=np.nan)
-    train_df['city'] = LabelEncoder().fit_transform(train_df['city'])
-    for col_name in PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES:
-        train_df[col_name] = LabelEncoder().fit_transform(train_df[col_name])
-    for col_name in PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES:
-        train_df[col_name] = LabelEncoder().fit_transform(train_df[col_name])
 
     # create test dataset
     test_set = parse_test_set() \
@@ -261,11 +247,15 @@ def main():
         PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES
     )
     test_df = test_df.fillna(value=np.nan)
-    test_df['city'] = LabelEncoder().fit_transform(test_df['city'])
+
     for col_name in PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES:
-        test_df[col_name] = LabelEncoder().fit_transform(test_df[col_name])
+        le = LabelEncoder()
+        train_df[col_name] = le.fit_transform(train_df[col_name])
+        test_df[col_name] = le.transform(test_df[col_name])
     for col_name in PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES:
-        test_df[col_name] = LabelEncoder().fit_transform(test_df[col_name])
+        le = LabelEncoder()
+        train_df[col_name] = le.fit_transform(train_df[col_name])
+        test_df[col_name] = le.transform(test_df[col_name])
 
     # format data and write to file
     # write_results_to_file(map(
@@ -279,7 +269,7 @@ def main():
     validations = parse_val_set().collectAsMap()
 
     study = create_study(direction='minimize')
-    study.optimize(_objective, n_trials=1)
+    study.optimize(_objective, n_trials=5)
     log_results(study)
 
 
