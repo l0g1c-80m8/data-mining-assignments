@@ -7,7 +7,6 @@ import numpy as np
 
 from datetime import datetime
 from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import KFold
 from pyspark import SparkConf, SparkContext
 
 
@@ -24,6 +23,7 @@ def parse_args():
     run_time_params['test_file'] = sys.argv[2]
     run_time_params['out_file'] = sys.argv[3]
     run_time_params['train'] = 'yelp_train.csv'
+    run_time_params['val'] = 'yelp_val.csv'
     run_time_params['user'] = 'user.json'
     run_time_params['business'] = 'business.json'
     run_time_params['record_cols'] = ['user_id', 'business_id', 'rating']
@@ -37,6 +37,17 @@ def parse_args():
 
 def parse_train_set():
     filename = '{}/{}'.format(params['in_dir'], params['train'])
+    with open(filename, 'r') as fh:
+        header = fh.readline().strip()
+
+    return sc.textFile(filename) \
+        .filter(lambda line: line.strip() != header) \
+        .map(lambda line: line.split(',')) \
+        .map(lambda record: (record[0], record[1], float(record[2])))
+
+
+def parse_val_set():
+    filename = '{}/{}'.format(params['in_dir'], params['val'])
     with open(filename, 'r') as fh:
         header = fh.readline().strip()
 
@@ -160,6 +171,15 @@ def main():
                 + ['n_cats', 'alcohol', 'delivery', 'kids', 'seating', 'groups', 'table_service', 'takeout',
                    'caters', 'wheelchair', 'price_range']
     )
+    train_df = train_df.append(pd.DataFrame(
+        parse_val_set()
+        .map(lambda record: fill_features(record, user_data, business_data))
+        .collect(),
+        columns=params['record_cols'] + params['user_feature_cols'] + ['n_friends', 'n_compliments']
+                + params['business_feature_cols']
+                + ['n_cats', 'alcohol', 'delivery', 'kids', 'seating', 'groups', 'table_service', 'takeout',
+                   'caters', 'wheelchair', 'price_range']
+    ))
     train_df = train_df.fillna(value=np.nan)
 
     # create test dataset
