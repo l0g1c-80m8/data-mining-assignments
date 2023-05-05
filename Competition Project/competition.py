@@ -108,7 +108,7 @@ def parse_args():
     run_time_params['test_file'] = sys.argv[2]
     run_time_params['out_file'] = sys.argv[3]
     run_time_params['train'] = 'yelp_train.csv'
-    run_time_params['val'] = 'yelp_val__.csv'
+    run_time_params['val'] = 'yelp_val.csv'
     run_time_params['user'] = 'user.json'
     run_time_params['checkin'] = 'checkin.json'
     run_time_params['photo'] = 'photo.json'
