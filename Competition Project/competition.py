@@ -1,5 +1,30 @@
 """
+Competition Project
 Refine homework 3 task 2 to get RMSE below 0.98
+
+Model used: XGBRegressor
+
+To get the RMSE below 0.98 many additional features were used for the training of the model.
+Feature engineering and fine-tuning were the biggest boost to the accuracy of the model.
+A summary of the features is given below:
+
+User side features (10 features):
+[from user.json]
+- Review Count
+- useful
+- funny
+- fans
+- average stars
+- compliments (the various compliment features are aggregated into a single compliment feature)
+- friend count (number of friends in the list)
+[from tip.json]
+- user tip count (number of tip[s given by the user)
+[from review_train.json]
+- user text review count (number of text reviews left by the user)
+
+Business side features:
+[from business.json]
+-
 """
 
 import json
