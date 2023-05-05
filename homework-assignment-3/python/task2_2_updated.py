@@ -187,11 +187,13 @@ def parse_business_set(business_checkin_count, business_photo_count, business_ti
                 )))
             features += (
                 business_obj['attributes'].get('RestaurantsPriceRange2', None),
-                business_checkin_count.get(business_obj['business_id'], 0),
-                business_photo_count.get(business_obj['business_id'], 0),
-                business_tip_count.get(business_obj['business_id'], 0),
-                business_text_review_count.get(business_obj['business_id'], 0)
             )
+        features += (
+            business_checkin_count.get(business_obj['business_id'], 0),
+            business_photo_count.get(business_obj['business_id'], 0),
+            business_tip_count.get(business_obj['business_id'], 0),
+            business_text_review_count.get(business_obj['business_id'], 0)
+        )
 
         return business_obj[params['record_cols'][1]], features
 
