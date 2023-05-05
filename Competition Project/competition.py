@@ -17,7 +17,7 @@ from pyspark import SparkConf, SparkContext
 def parse_args():
     if len(sys.argv) < 3:
         # expected arguments: script path, dataset path, output file path
-        print('ERR: Expected two arguments: (input file path, output file path).')
+        print('ERR: Expected two arguments: (dataset dir path, input file path, output file path).')
         exit(1)
 
     # read program arguments
