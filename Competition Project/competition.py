@@ -1,74 +1,57 @@
+import json
+import pandas as pd
+import os
+import sys
+import xgboost as xgb
 import numpy as np
 
-from argparse import Namespace
-from collections import defaultdict
 from datetime import datetime
-from json import loads
-from math import sqrt
-from optuna import create_study
-from os import environ
-from pandas import DataFrame, set_option
-from pyspark import SparkConf, SparkContext
 from sklearn.preprocessing import LabelEncoder
-from sys import argv, executable
-from xgboost import XGBRegressor
-
-set_option('display.max_columns', None)
+from pyspark import SparkConf, SparkContext
 
 
 def parse_args():
-    if len(argv) < 3:
+    if len(sys.argv) < 3:
         # expected arguments: script path, dataset path, output file path
         print('ERR: Expected two arguments: (input file path, output file path).')
         exit(1)
 
     # read program arguments
-    return Namespace(
-        APP_NAME='competition_project',
-        IN_DIR=argv[1],
-        TEST_FILE=argv[2],
-        OUT_FILE=argv[3],
-        TRAIN_FILE='yelp_train.csv',
-        USER_FILE='user.json',
-        BUSINESS_FILE='business.json',
-        RECORD_COLS=['user_id', 'business_id', 'rating'],
-        USER_FEATURE_COLS=['review_count', 'average_stars'
-                           ],
-        BUSINESS_FEATURE_COLS=['business_stars', 'business_review_count',
-                               'business_attributes'
-                               ],
-        BUSINESS_BOOL_FEATURE_ATTRIBUTES=[],
-        BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES=[]
-    )
-
-
-def get_business_feature_col_extractors():
-    def _attribute_extractor(business_obj):
-        if business_obj['attributes'] is None:
-            return tuple([None] * (
-                    len(PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES) +
-                    len(PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES)
-            ))
-        return tuple(map(
-            lambda attr: bool(business_obj['attributes'][attr]) if attr in business_obj['attributes'] else None,
-            PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES
-        )) + tuple(map(
-            lambda attr: business_obj['attributes'].get(attr, None),
-            PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES
-        ))
-
-    return {
-        'business_stars': lambda business_obj: (int(business_obj['stars']), ),
-        'business_review_count': lambda business_obj: (int(business_obj['review_count']), ),
-        'business_attributes': _attribute_extractor,
-        'latitude': lambda business_obj: (business_obj.get('latitude', None), ),
-        'longitude': lambda business_obj: (business_obj.get('longitude', None), ),
-        'city': lambda business_obj: (business_obj.get('city', None), ),
-    }
+    run_time_params = dict()
+    run_time_params['app_name'] = 'competition_project'
+    run_time_params['in_dir'] = sys.argv[1]
+    run_time_params['test_file'] = sys.argv[2]
+    run_time_params['out_file'] = sys.argv[3]
+    run_time_params['train'] = 'yelp_train.csv'
+    run_time_params['val'] = 'yelp_val.csv'
+    run_time_params['user'] = 'user.json'
+    run_time_params['checkin'] = 'checkin.json'
+    run_time_params['photo'] = 'photo.json'
+    run_time_params['tip'] = 'tip.json'
+    run_time_params['review'] = 'review_train.json'
+    run_time_params['business'] = 'business.json'
+    run_time_params['record_cols'] = ['user_id', 'business_id', 'rating']
+    run_time_params['user_feature_cols'] = ['review_count', 'useful', 'funny', 'cool', 'fans', 'average_stars']
+    run_time_params['business_feature_cols'] = ['business_stars', 'business_review_count', 'business_is_open',
+                                                'business_city', 'business_latitude', 'business_longitude',
+                                                'business_state'
+                                                ]
+    return run_time_params
 
 
 def parse_train_set():
-    filename = '{}/{}'.format(PARAMS_NS.IN_DIR, PARAMS_NS.TRAIN_FILE)
+    filename = '{}/{}'.format(params['in_dir'], params['train'])
+    with open(filename, 'r') as fh:
+        header = fh.readline().strip()
+
+    return sc.textFile(filename) \
+        .filter(lambda line: line.strip() != header) \
+        .map(lambda line: line.split(',')) \
+        .map(lambda record: (record[0], record[1], float(record[2])))
+
+
+def parse_val_set():
+    filename = '{}/{}'.format(params['in_dir'], params['val'])
     with open(filename, 'r') as fh:
         header = fh.readline().strip()
 
@@ -79,211 +62,296 @@ def parse_train_set():
 
 
 def parse_test_set():
-    with open(PARAMS_NS.TEST_FILE, 'r') as fh:
+    with open(params['test_file'], 'r') as fh:
         header = fh.readline().strip()
 
-    return sc.textFile(PARAMS_NS.TEST_FILE) \
+    return sc.textFile(params['test_file']) \
         .filter(lambda line: line.strip() != header) \
         .map(lambda line: line.split(',')) \
-        .map(lambda record: (record[0], record[1], 0))
+        .map(lambda record: (record[0], record[1]))
 
 
-def parse_val_set():
-    with open(PARAMS_NS.TEST_FILE, 'r') as fh:
-        header = fh.readline().strip()
-
-    return sc.textFile(PARAMS_NS.TEST_FILE) \
-        .filter(lambda line: line.strip() != header) \
-        .map(lambda line: line.split(',')) \
-        .map(lambda record: ((record[0], record[1]), float(record[2])))
+def parse_checkin_count():
+    return sc.textFile('{}/{}'.format(params['in_dir'], params['checkin'])) \
+        .map(lambda line: json.loads(line)) \
+        .map(lambda checkin_obj: (checkin_obj['business_id'], sum(checkin_obj['time'].values())))
 
 
-def parse_user_set():
-    filename = '{}/{}'.format(PARAMS_NS.IN_DIR, PARAMS_NS.USER_FILE)
+def parse_business_photo_count():
+    return sc.textFile('{}/{}'.format(params['in_dir'], params['photo'])) \
+        .map(lambda line: json.loads(line)) \
+        .map(lambda photo_obj: (photo_obj['business_id'], photo_obj['photo_id'])) \
+        .groupByKey() \
+        .map(lambda business_id_count: (business_id_count[0], len(business_id_count[1])))
+
+
+def parse_business_tip_count():
+    return sc.textFile('{}/{}'.format(params['in_dir'], params['tip'])) \
+        .map(lambda line: json.loads(line)) \
+        .map(lambda tip_obj: (tip_obj['business_id'], tip_obj['user_id'])) \
+        .groupByKey() \
+        .map(lambda business_id_count: (business_id_count[0], len(business_id_count[1])))
+
+
+def parse_user_tip_count():
+    return sc.textFile('{}/{}'.format(params['in_dir'], params['tip'])) \
+        .map(lambda line: json.loads(line)) \
+        .map(lambda tip_obj: (tip_obj['user_id'], tip_obj['business_id'])) \
+        .groupByKey() \
+        .map(lambda user_id_count: (user_id_count[0], len(user_id_count[1])))
+
+
+def parse_business_text_review_count():
+    return sc.textFile('{}/{}'.format(params['in_dir'], params['review'])) \
+        .map(lambda line: json.loads(line)) \
+        .map(lambda review_obj: (review_obj['business_id'], review_obj['review_id'])) \
+        .groupByKey() \
+        .map(lambda business_id_count: (business_id_count[0], len(business_id_count[1])))
+
+
+def parse_user_text_review_count():
+    return sc.textFile('{}/{}'.format(params['in_dir'], params['review'])) \
+        .map(lambda line: json.loads(line)) \
+        .map(lambda review_obj: (review_obj['user_id'], review_obj['review_id'])) \
+        .groupByKey() \
+        .map(lambda user_id_count: (user_id_count[0], len(user_id_count[1])))
+
+
+def parse_user_set(user_tip_count, user_text_review_count):
+    filename = '{}/{}'.format(params['in_dir'], params['user'])
+
+    def _user_features(user_obj):
+        features = tuple(map(
+            lambda col_name: user_obj[col_name],
+            params['user_feature_cols']
+        ))
+        if user_obj['friends'] is None:
+            features += (None,)
+        else:
+            features += (len(user_obj['friends'].split(', ')),)
+        features += (sum(map(
+            lambda val: int(val),
+            [
+                user_obj.get('compliment_hot', 0),
+                user_obj.get('compliment_more', 0),
+                user_obj.get('compliment_profile', 0),
+                user_obj.get('compliment_cute', 0),
+                user_obj.get('compliment_list', 0),
+                user_obj.get('compliment_note', 0),
+                user_obj.get('compliment_plain', 0),
+                user_obj.get('compliment_cool', 0),
+                user_obj.get('compliment_funny', 0),
+                user_obj.get('compliment_writer', 0),
+                user_obj.get('compliment_photos', 0),
+            ]
+        )),)
+        features += (
+            user_tip_count.get(user_obj['user_id'], 0),
+            user_text_review_count.get(user_obj['user_id'], 0)
+        )
+
+        return user_obj[params['record_cols'][0]], features
 
     return sc.textFile(filename) \
-        .map(lambda json_string: loads(json_string)) \
-        .map(lambda user_obj: (user_obj[PARAMS_NS.RECORD_COLS[0]],
-                               tuple(map(
-                                   lambda col_name: user_obj[col_name],
-                                   PARAMS_NS.USER_FEATURE_COLS
-                               ))
-                               )
-             )
+        .map(lambda json_string: json.loads(json_string)) \
+        .map(_user_features)
 
 
-def parse_business_set():
-    def _business_data_parser(business_obj):
-        result = tuple()
-        for col_name in PARAMS_NS.BUSINESS_FEATURE_COLS:
-            result += BUSINESS_FEATURE_EXTRACTORS[col_name](business_obj)
-        return result
+def parse_business_set(business_checkin_count, business_photo_count, business_tip_count, business_text_review_count):
+    filename = '{}/{}'.format(params['in_dir'], params['business'])
 
-    filename = '{}/{}'.format(PARAMS_NS.IN_DIR, PARAMS_NS.BUSINESS_FILE)
+    def _business_features(business_obj):
+        features = tuple(map(
+            lambda col_name: business_obj[col_name.replace('business_', '')],
+            params['business_feature_cols']
+        ))
+        if business_obj['categories'] is None:
+            features += (0,)
+        else:
+            features += (len(business_obj['categories'].split(', ')),)
+        if business_obj['attributes'] is None:
+            features += tuple([None] * 19)
+        else:
+            features += tuple(map(
+                lambda val: int(bool(val)) if val is not None else None,
+                (
+                    business_obj['attributes'].get('Alcohol', None),
+                    business_obj['attributes'].get('RestaurantsDelivery', None),
+                    business_obj['attributes'].get('GoodForKids', None),
+                    business_obj['attributes'].get('OutdoorSeating', None),
+                    business_obj['attributes'].get('RestaurantsGoodForGroups', None),
+                    business_obj['attributes'].get('RestaurantsTableService', None),
+                    business_obj['attributes'].get('RestaurantsTakeOut', None),
+                    business_obj['attributes'].get('Caters', None),
+                    business_obj['attributes'].get('WheelchairAccessible', None),
+                )))
+            features += (
+                business_obj['attributes'].get('RestaurantsPriceRange2', None),
+            )
+            if business_obj['attributes'].get('Ambience', None) is None:
+                features += tuple([None] * 9)
+            else:
+                ambience_obj = json.loads(business_obj['attributes']['Ambience'].replace('\'', '"')
+                                          .replace('False', '"False"')
+                                          .replace('True', '"True"'))
+                features += tuple(map(
+                    lambda val: int(bool(val)) if val is not None else None,
+                    (
+                        ambience_obj.get('romantic', None),
+                        ambience_obj.get('intimate', None),
+                        ambience_obj.get('classy', None),
+                        ambience_obj.get('hipster', None),
+                        ambience_obj.get('divey', None),
+                        ambience_obj.get('touristy', None),
+                        ambience_obj.get('trendy', None),
+                        ambience_obj.get('upscale', None),
+                        ambience_obj.get('casual', None),
+                    )))
+        features += (
+            business_checkin_count.get(business_obj['business_id'], 0),
+            business_photo_count.get(business_obj['business_id'], 0),
+            business_tip_count.get(business_obj['business_id'], 0),
+            business_text_review_count.get(business_obj['business_id'], 0)
+        )
+
+        return business_obj[params['record_cols'][1]], features
+
     return sc.textFile(filename) \
-        .map(lambda json_string: loads(json_string)) \
-        .map(lambda business_obj: (business_obj[PARAMS_NS.RECORD_COLS[1]], _business_data_parser(business_obj)))
+        .map(lambda json_string: json.loads(json_string)) \
+        .map(_business_features)
 
 
 def write_results_to_file(data):
-    file_header = '{}\n'.format(', '.join(PARAMS_NS.RECORD_COLS))
-    with open(PARAMS_NS.OUT_FILE, 'w') as fh:
+    file_header = '{}\n'.format(', '.join(params['record_cols']))
+    with open(params['out_file'], 'w') as fh:
         fh.write(file_header)
         for record in data:
             fh.write('{}\n'.format(','.join(map(lambda item: str(item), list(record)))))
 
 
 def fill_features(record, user_data, business_data):
-    user_features = user_data.get(record[0], tuple([0] * len(PARAMS_NS.USER_FEATURE_COLS)))
-    business_features = business_data.get(
-        record[1],
-        tuple([0] * (
-                    len(PARAMS_NS.BUSINESS_FEATURE_COLS[: -1]) +
-                    len(PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES) +
-                    len(PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES)
-        )))
+    user_features = user_data.get(record[0], tuple([0] * 10))
+    business_features = business_data.get(record[1], tuple([0] * 31))
     return record + user_features + business_features
 
 
-def evaluate(validations, predictions):
-    rmse = 0.0
-    distribution = defaultdict(int)
-    for key in predictions.keys():
-        diff = abs(predictions[key] - validations[key])
-        if diff < 0:
-            distribution['<0'] += 1
-        elif diff < 1:
-            distribution['<1'] += 1
-        elif diff < 2:
-            distribution['<2'] += 1
-        elif diff < 3:
-            distribution['<3'] += 1
-        elif diff < 4:
-            distribution['<4'] += 1
-        elif diff <= 5:
-            distribution['<=5'] += 1
-        else:
-            distribution['>5'] += 1
-
-        rmse += pow(diff, 2)
-
-    rmse = sqrt(rmse / sum(distribution.values()))
-
-    # print(distribution, sum(distribution.values()))
-    return rmse
-
-
-def log_results(study):
-    print('Number of finished trials: {}'.format(len(study.trials)))
-    print('Best trial:')
-    trial = study.best_trial
-    print('  Value: {}'.format(trial.value))
-    print('  Params: ')
-    for key, value in trial.params.items():
-        print('    {}: {}'.format(key, value))
-
-
 def main():
-    def _objective(trial):
-        hyper_params = {
-            'max_depth': trial.suggest_int('max_depth', 10, 10),
-            'learning_rate': trial.suggest_float('learning_rate', 0.1, 0.1, log=True),
-            'n_estimators': trial.suggest_int('n_estimators', 100, 100),
-            # 'min_child_weight': trial.suggest_int('min_child_weight', 1, 10),
-            # 'gamma': trial.suggest_float('gamma', 1e-8, 1.0, log=True),
-            # 'subsample': trial.suggest_float('subsample', 0.01, 1.0, log=True),
-            # 'colsample_bytree': trial.suggest_float('colsample_bytree', 0.01, 1.0, log=True),
-            # 'reg_alpha': trial.suggest_float('reg_alpha', 1e-8, 1.0, log=True),
-            # 'reg_lambda': trial.suggest_float('reg_lambda', 1e-8, 1.0, log=True),
-            # 'eval_metric': 'rmse',
-            'tree_method': 'gpu_hist',
-            'booster': 'gbtree',
-            'verbosity': 0
-        }
-
-        # Fit the model
-        optuna_model = XGBRegressor(**hyper_params)
-        optuna_model.fit(x_train, y_train)
-
-        # Make predictions
-        y_pred = optuna_model.predict(x_test)
-
-        # Evaluate predictions
-        accuracy = evaluate(validations, dict(map(
-            lambda indexed_pair: ((indexed_pair[1][0], indexed_pair[1][1]), y_pred[indexed_pair[0]]),
-            enumerate(test_set)
-        )))
-        return accuracy
-
     # create feature data
-    user_data = parse_user_set().collectAsMap()
-    business_data = parse_business_set().collectAsMap()
+    user_tip_count = parse_user_tip_count().collectAsMap()
+    user_text_review_count = parse_user_text_review_count().collectAsMap()
+    user_data = parse_user_set(user_tip_count, user_text_review_count).collectAsMap()
+    business_checkin_count = parse_checkin_count().collectAsMap()
+    business_photo_count = parse_business_photo_count().collectAsMap()
+    business_tip_count = parse_business_tip_count().collectAsMap()
+    business_text_review_count = parse_business_text_review_count().collectAsMap()
+    business_data = parse_business_set(
+        business_checkin_count,
+        business_photo_count,
+        business_tip_count,
+        business_text_review_count
+    ).collectAsMap()
 
     # create training dataset
-    train_df = DataFrame(
+    train_df = pd.DataFrame(
         parse_train_set()
         .map(lambda record: fill_features(record, user_data, business_data))
         .collect(),
-        columns=
-        PARAMS_NS.RECORD_COLS +
-        PARAMS_NS.USER_FEATURE_COLS +
-        PARAMS_NS.BUSINESS_FEATURE_COLS[: -1] +
-        PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES +
-        PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES
+        columns=params['record_cols'] + params['user_feature_cols'] + ['n_friends', 'n_compliments', 'tip_count',
+                                                                       'text_r_count']
+                + params['business_feature_cols']
+                + ['n_cats', 'alcohol', 'delivery', 'kids', 'seating', 'groups', 'table_service', 'takeout',
+                   'caters', 'wheelchair', 'price_range', 'romantic', 'intimate', 'classy', 'hipster', 'divey',
+                   'touristy', 'trendy', 'upscale', 'casual',
+                   'checkin_count', 'photo_count', 'tip_count', 'text_r_count']
     )
+    # train_df = train_df.append(pd.DataFrame(
+    #     parse_val_set()
+    #     .map(lambda record: fill_features(record, user_data, business_data))
+    #     .collect(),
+    #     columns=params['record_cols'] + params['user_feature_cols'] + ['n_friends', 'n_compliments', 'tip_count',
+    # 'text_r_count']
+    #             + params['business_feature_cols']
+    #             + ['n_cats', 'alcohol', 'delivery', 'kids', 'seating', 'groups', 'table_service', 'takeout',
+    #                    'caters', 'wheelchair', 'price_range', 'romantic', 'intimate', 'classy', 'hipster', 'divey',
+    #                    'touristy', 'trendy', 'upscale', 'casual',
+    #                    'checkin_count', 'photo_count', 'tip_count', 'text_r_count']
+    # ))
     train_df = train_df.fillna(value=np.nan)
 
     # create test dataset
     test_set = parse_test_set() \
         .map(lambda record: fill_features(record, user_data, business_data)) \
         .collect()
-    test_df = DataFrame(
-        test_set,
-        columns=
-        PARAMS_NS.RECORD_COLS +
-        PARAMS_NS.USER_FEATURE_COLS +
-        PARAMS_NS.BUSINESS_FEATURE_COLS[: -1] +
-        PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES +
-        PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES
-    )
+    test_df = pd.DataFrame(test_set,
+                           columns=params['record_cols'][: -1] + params['user_feature_cols']
+                                   + ['n_friends', 'n_compliments', 'tip_count', 'text_r_count']
+                                   + params['business_feature_cols']
+                                   + ['n_cats', 'alcohol', 'delivery', 'kids', 'seating', 'groups', 'table_service',
+                                      'takeout',
+                                      'caters', 'wheelchair', 'price_range', 'romantic', 'intimate', 'classy',
+                                      'hipster', 'divey',
+                                      'touristy', 'trendy', 'upscale', 'casual',
+                                      'checkin_count', 'photo_count', 'tip_count', 'text_r_count']
+                           )
     test_df = test_df.fillna(value=np.nan)
 
-    for col_name in PARAMS_NS.BUSINESS_BOOL_FEATURE_ATTRIBUTES:
-        le = LabelEncoder()
-        train_df[col_name] = le.fit_transform(train_df[col_name])
-        test_df[col_name] = le.transform(test_df[col_name])
-    for col_name in PARAMS_NS.BUSINESS_CATEGORIAL_FEATURE_ATTRIBUTES:
-        le = LabelEncoder()
-        train_df[col_name] = le.fit_transform(train_df[col_name])
-        test_df[col_name] = le.transform(test_df[col_name])
+    le = LabelEncoder()
+    le.fit(train_df['business_city'].astype(str))
+    test_df['business_city'] = test_df['business_city'].map(lambda s: '<unknown>' if s not in le.classes_ else s)
+    le.classes_ = np.append(le.classes_, '<unknown>')
+    train_df['business_city'] = le.transform(train_df['business_city'].astype(str))
+    test_df['business_city'] = le.transform(test_df['business_city'].astype(str))
+    le = LabelEncoder()
+    le.fit(train_df['business_state'].astype(str))
+    test_df['business_state'] = test_df['business_state'].map(lambda s: '<unknown>' if s not in le.classes_ else s)
+    le.classes_ = np.append(le.classes_, '<unknown>')
+    train_df['business_state'] = le.transform(train_df['business_state'].astype(str))
+    test_df['business_state'] = le.transform(test_df['business_state'].astype(str))
+    le = LabelEncoder()
+    le.fit(train_df['price_range'].astype(str))
+    test_df['price_range'] = test_df['price_range'].map(lambda s: '<unknown>' if s not in le.classes_ else s)
+    le.classes_ = np.append(le.classes_, '<unknown>')
+    train_df['price_range'] = le.transform(train_df['price_range'].astype(str))
+    test_df['price_range'] = le.transform(test_df['price_range'].astype(str))
+
+    train_x, train_y = train_df.drop(params['record_cols'], axis=1).values, train_df[params['record_cols'][-1:]].values
+    test_x = test_df.drop(params['record_cols'][: -1], axis=1).values
+
+    # define the regressor model
+    model = xgb.XGBRegressor(
+        min_child_weight=2,
+        n_estimators=135,
+        learning_rate=0.11,
+        max_depth=6,
+        booster='gbtree',
+        verbosity=0,
+        subsample=0.9,
+        colsample_bytree=0.9,
+        # tree_method='gpu_hist'
+    )
+    # model = xgb.XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=10, booster='gbtree', verbosity=0)
+    # train the model
+    model.fit(train_x, train_y)
+    # generate predictions
+    predictions = model.predict(test_x)
 
     # format data and write to file
-    # write_results_to_file(map(
-    #     lambda indexed_pair: (indexed_pair[1][0], indexed_pair[1][1], predictions[indexed_pair[0]]),
-    #     enumerate(test_set)
-    # ))
-
-    x_train, y_train = train_df.drop(PARAMS_NS.RECORD_COLS, axis=1).values, \
-        train_df[PARAMS_NS.RECORD_COLS[-1:]].values
-    x_test = test_df.drop(PARAMS_NS.RECORD_COLS, axis=1).values
-    validations = parse_val_set().collectAsMap()
-
-    study = create_study(direction='minimize')
-    study.optimize(_objective, n_trials=5)
-    log_results(study)
+    write_results_to_file(map(
+        lambda indexed_pair: (indexed_pair[1][0], indexed_pair[1][1], predictions[indexed_pair[0]]),
+        enumerate(test_set)
+    ))
 
 
 if __name__ == '__main__':
     # set executables
-    environ['PYSPARK_PYTHON'] = executable
-    environ['PYSPARK_DRIVER_PYTHON'] = executable
+    os.environ['PYSPARK_PYTHON'] = sys.executable
+    os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
 
     # initialize program parameters
-    PARAMS_NS = parse_args()
-    BUSINESS_FEATURE_EXTRACTORS = get_business_feature_col_extractors()
+    params = parse_args()
 
     # create spark context
-    sc = SparkContext(conf=SparkConf().setAppName(PARAMS_NS.APP_NAME).setMaster("local[*]"))
+    sc = SparkContext(conf=SparkConf().setAppName(params['app_name']).setMaster("local[*]"))
     sc.setLogLevel('ERROR')
 
     # run prediction
