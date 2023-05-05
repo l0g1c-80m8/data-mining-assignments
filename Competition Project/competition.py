@@ -1,3 +1,7 @@
+"""
+Refine homework 3 task 2 to get RMSE below 0.98
+"""
+
 import json
 import pandas as pd
 import os
