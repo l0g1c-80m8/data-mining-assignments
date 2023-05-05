@@ -1,3 +1,4 @@
+
 """
 Competition Project
 Refine homework 3 task 2 to get RMSE below 0.98
@@ -22,11 +23,46 @@ User side features (10 features):
 [from review_train.json]
 - user text review count (number of text reviews left by the user)
 
-Business side features:
+Business side features (31 features):
 [from business.json]
--
+- average stars
+- review count
+- is business open
+- city
+- latitude
+- longitude
+- state
+- category count (number of categories associated with the business)
+- business attributes:
+    - Alcohol?
+    - Restaurant delivery?
+    - Good for kids?
+    - Outdoor seating?
+    - good for groups?
+    - table service?
+    - takeout?
+    - caters?
+    - Wheelchair accessible?
+    - Price range (categorical)
+    - Ambience:
+        - romantic?
+        - intimate?
+        - classy?
+        - casual?
+        - hipster?
+        - divey?
+        - touristy?
+        - trendy?
+        - upscale?
+[from checkin.json]:
+- checkin count (number of checkins for the business)
+[from photo.json]:
+- photo count (photos available for the business)
+[from tip.json]:
+- tip count (tips left for the business)
+[from review_train.json]:
+- text review count (text reviews left for the business)
 """
-
 import json
 import pandas as pd
 import os
