@@ -327,7 +327,7 @@ def main():
         verbosity=0,
         subsample=0.9,
         colsample_bytree=0.9,
-        tree_method='gpu_hist'
+        # tree_method='gpu_hist'
     )
     # model = xgb.XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=10, booster='gbtree', verbosity=0)
     # train the model
