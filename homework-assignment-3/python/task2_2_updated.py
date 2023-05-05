@@ -170,7 +170,7 @@ def parse_business_set(business_checkin_count, business_photo_count, business_ti
         else:
             features += (len(business_obj['categories'].split(', ')),)
         if business_obj['attributes'] is None:
-            features += tuple([None] * 9)
+            features += tuple([None] * 19)
         else:
             features += tuple(map(
                 lambda val: int(bool(val)) if val is not None else None,
@@ -188,6 +188,25 @@ def parse_business_set(business_checkin_count, business_photo_count, business_ti
             features += (
                 business_obj['attributes'].get('RestaurantsPriceRange2', None),
             )
+            if business_obj['attributes'].get('Ambience', None) is None:
+                features += tuple([None] * 9)
+            else:
+                ambience_obj = json.loads(business_obj['attributes']['Ambience'].replace('\'', '"')
+                                          .replace('False', '"False"')
+                                          .replace('True', '"True"'))
+                features += tuple(map(
+                    lambda val: int(bool(val)) if val is not None else None,
+                    (
+                        ambience_obj.get('romantic', None),
+                        ambience_obj.get('intimate', None),
+                        ambience_obj.get('classy', None),
+                        ambience_obj.get('hipster', None),
+                        ambience_obj.get('divey', None),
+                        ambience_obj.get('touristy', None),
+                        ambience_obj.get('trendy', None),
+                        ambience_obj.get('upscale', None),
+                        ambience_obj.get('casual', None),
+                    )))
         features += (
             business_checkin_count.get(business_obj['business_id'], 0),
             business_photo_count.get(business_obj['business_id'], 0),
@@ -212,7 +231,7 @@ def write_results_to_file(data):
 
 def fill_features(record, user_data, business_data):
     user_features = user_data.get(record[0], tuple([0] * 10))
-    business_features = business_data.get(record[1], tuple([0] * 22))
+    business_features = business_data.get(record[1], tuple([0] * 31))
     return record + user_features + business_features
 
 
@@ -241,17 +260,21 @@ def main():
                                                                        'text_r_count']
                 + params['business_feature_cols']
                 + ['n_cats', 'alcohol', 'delivery', 'kids', 'seating', 'groups', 'table_service', 'takeout',
-                   'caters', 'wheelchair', 'price_range', 'checkin_count', 'photo_count', 'tip_count', 'text_r_count']
+                   'caters', 'wheelchair', 'price_range', 'romantic', 'intimate', 'classy', 'hipster', 'divey',
+                   'touristy', 'trendy', 'upscale', 'casual',
+                   'checkin_count', 'photo_count', 'tip_count', 'text_r_count']
     )
     # train_df = train_df.append(pd.DataFrame(
     #     parse_val_set()
     #     .map(lambda record: fill_features(record, user_data, business_data))
     #     .collect(),
     #     columns=params['record_cols'] + params['user_feature_cols'] + ['n_friends', 'n_compliments', 'tip_count',
-                                                                       # 'text_r_count']
+    # 'text_r_count']
     #             + params['business_feature_cols']
     #             + ['n_cats', 'alcohol', 'delivery', 'kids', 'seating', 'groups', 'table_service', 'takeout',
-    #                'caters', 'wheelchair', 'price_range', 'checkin_count', 'photo_count', 'tip_count', 'text_r_count']
+    #                    'caters', 'wheelchair', 'price_range', 'romantic', 'intimate', 'classy', 'hipster', 'divey',
+    #                    'touristy', 'trendy', 'upscale', 'casual',
+    #                    'checkin_count', 'photo_count', 'tip_count', 'text_r_count']
     # ))
     train_df = train_df.fillna(value=np.nan)
 
@@ -264,8 +287,11 @@ def main():
                                    + ['n_friends', 'n_compliments', 'tip_count', 'text_r_count']
                                    + params['business_feature_cols']
                                    + ['n_cats', 'alcohol', 'delivery', 'kids', 'seating', 'groups', 'table_service',
-                                      'takeout', 'caters', 'wheelchair', 'price_range', 'checkin_count', 'photo_count',
-                                      'tip_count', 'text_r_count']
+                                      'takeout',
+                                      'caters', 'wheelchair', 'price_range', 'romantic', 'intimate', 'classy',
+                                      'hipster', 'divey',
+                                      'touristy', 'trendy', 'upscale', 'casual',
+                                      'checkin_count', 'photo_count', 'tip_count', 'text_r_count']
                            )
     test_df = test_df.fillna(value=np.nan)
 
