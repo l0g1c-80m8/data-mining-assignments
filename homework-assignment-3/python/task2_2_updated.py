@@ -7,6 +7,7 @@ import numpy as np
 
 from datetime import datetime
 from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import KFold
 from pyspark import SparkConf, SparkContext
 
 
@@ -82,7 +83,7 @@ def parse_user_set():
                 user_obj.get('compliment_writer', 0),
                 user_obj.get('compliment_photos', 0),
             ]
-        )), )
+        )),)
 
         return user_obj[params['record_cols'][0]], features
 
@@ -193,6 +194,9 @@ def main():
     train_df['price_range'] = le.transform(train_df['price_range'].astype(str))
     test_df['price_range'] = le.transform(test_df['price_range'].astype(str))
 
+    train_x, train_y = train_df.drop(params['record_cols'], axis=1).values, train_df[params['record_cols'][-1:]].values
+    test_x = test_df.drop(params['record_cols'][: -1], axis=1).values
+
     # define the regressor model
     model = xgb.XGBRegressor(
         min_child_weight=2,
@@ -207,9 +211,9 @@ def main():
     )
     # model = xgb.XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=10, booster='gbtree', verbosity=0)
     # train the model
-    model.fit(train_df.drop(params['record_cols'], axis=1).values, train_df[params['record_cols'][-1:]].values)
+    model.fit(train_x, train_y)
     # generate predictions
-    predictions = model.predict(test_df.drop(params['record_cols'][: -1], axis=1).values)
+    predictions = model.predict(test_x)
 
     # format data and write to file
     write_results_to_file(map(
