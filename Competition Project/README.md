@@ -154,3 +154,145 @@ x-8ZMKKNycT3782Kqf9loA,jgtWfJCJZty_Nctqpdtp3g
 LcCRMIDz1JgshpPGYfLDcA,t19vb_4ML2dg5HZ-MF3muA
 C__1BHWTGBNA5s2ZPH289g,h_UvnQfe1cuVICly_kIqHg
 ```
+
+### File 6: ```checkin.csv```
+This file contains business checkin details (counts) over some period of time as line seperated json records.
+A sample record is given below:
+```
+{
+  "time": {
+    "Fri-0": 2,
+    "Sat-0": 1,
+    "Sun-0": 1,
+    "Wed-0": 2,
+    "Fri-1": 1,
+    "Sat-1": 3,
+    "Thu-1": 1,
+    "Wed-1": 1,
+    "Sat-2": 1,
+    "Sun-2": 2,
+    "Thu-2": 1,
+    "Wed-2": 1,
+    "Fri-3": 1,
+    "Sun-3": 3,
+    "Mon-4": 1,
+    "Thu-4": 1,
+    "Tue-4": 2,
+    "Wed-4": 2,
+    "Sun-6": 1,
+    "Wed-6": 1,
+    "Thu-7": 1,
+    "Fri-10": 3,
+    "Mon-10": 1,
+    "Sat-10": 3,
+    "Sun-10": 3,
+    "Tue-10": 2,
+    "Mon-11": 1,
+    "Thu-11": 1,
+    "Wed-11": 2,
+    "Mon-12": 1,
+    "Sat-12": 1,
+    "Tue-12": 1,
+    "Sat-13": 3,
+    "Thu-13": 1,
+    "Tue-13": 2,
+    "Wed-13": 3,
+    "Fri-14": 2,
+    "Mon-14": 1,
+    "Sat-14": 1,
+    "Sun-14": 1,
+    "Tue-14": 1,
+    "Wed-14": 2,
+    "Fri-15": 1,
+    "Mon-15": 1,
+    "Sat-15": 1,
+    "Thu-15": 2,
+    "Tue-15": 1,
+    "Fri-16": 1,
+    "Sat-16": 2,
+    "Sun-16": 1,
+    "Thu-16": 1,
+    "Tue-16": 1,
+    "Fri-17": 1,
+    "Mon-17": 3,
+    "Sat-17": 4,
+    "Sun-17": 1,
+    "Tue-17": 1,
+    "Wed-17": 1,
+    "Fri-18": 1,
+    "Mon-18": 1,
+    "Sat-18": 4,
+    "Sun-18": 1,
+    "Thu-18": 1,
+    "Tue-18": 2,
+    "Wed-18": 1,
+    "Fri-19": 3,
+    "Mon-19": 1,
+    "Sun-19": 2,
+    "Thu-19": 1,
+    "Wed-19": 1,
+    "Mon-20": 1,
+    "Sun-20": 5,
+    "Thu-20": 4,
+    "Tue-20": 2,
+    "Wed-20": 3,
+    "Fri-21": 4,
+    "Mon-21": 1,
+    "Sat-21": 1,
+    "Sun-21": 1,
+    "Thu-21": 4,
+    "Tue-21": 1,
+    "Wed-21": 1,
+    "Fri-22": 3,
+    "Thu-22": 1,
+    "Fri-23": 1,
+    "Mon-23": 2,
+    "Sat-23": 3,
+    "Sun-23": 1,
+    "Thu-23": 2,
+    "Tue-23": 2
+  },
+  "business_id": "7KPBkxAOEtb3QeIL9PEErg"
+}
+```
+
+### File 7: ```tip.csv```
+This file contains tips left by users for various businesses. This file is organized as line seperated json records.
+A sample record is given below.
+```
+{
+  "text": "Open for the 2015 season. Same great quality.",
+  "date": "2015-03-15",
+  "likes": 0,
+  "business_id": "08t3_HjbpLyPeuft6eoa5A",
+  "user_id": "blrWvPePSv87aU9hV1Zd8Q"
+}
+```
+
+### File 8: ```photo.csv```
+This file contains photo ids for businesses as line seperated json records. A sample record is given below.
+```
+{
+  "photo_id": "Yenb3dgITQ-rUg7wTsoFLw",
+  "business_id": "TFdLM8R_7Pf1xVeBNKl0hg",
+  "caption": "potato gnocchi made vegetarian",
+  "label": "food"
+}
+```
+
+### File 9: ```review_train.csv```
+This file contains reviews left by users for various businesses including text reviews. Each line is a json record
+for the review object. A sample record is given below.
+```
+{
+  "review_id": "Bg45wKhLg-aHlX8RHBITRQ",
+  "user_id": "fuoYjsuU7qy1RlCMEZ0xfA",
+  "business_id": "wWpw4gbA9B6VWt85351TvA",
+  "stars": 4,
+  "date": "2011-03-29",
+  "text": "Call me a flip-floper or whatever - I\"m doing a major 180 shift. \n\nI started dating a guy who is a vegetarian, and eats organic food almost exclusively. In two years since we started to living together, I'm now a de-facto vegetarian, and yes, I eat local organic food whenever possible. \n\nDoes it come cheap? No, more like N.O. I don't really like looking at my grocery receipt. But I guess it's within reasons, and I do like supporting local farmers and manufactures. \n\nI can't end the post without giving shout-out to those people who come up with the Deli item recipes. They're incredibly delicious! Thank you. \n\nWhile the shop doesn't have everything in the world, I think it does a great job in selecting products and radiating positive energies in the community.",
+  "useful": 1,
+  "funny": 1,
+  "cool": 0
+}
+```
