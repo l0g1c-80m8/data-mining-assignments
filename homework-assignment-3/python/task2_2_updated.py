@@ -116,7 +116,7 @@ def parse_business_set():
         else:
             features += (len(business_obj['categories'].split(', ')),)
         if business_obj['attributes'] is None:
-            features += tuple([None] * 7)
+            features += tuple([None] * 9)
         else:
             features += tuple(map(
                 lambda val: int(bool(val)) if val is not None else None,
@@ -151,8 +151,8 @@ def write_results_to_file(data):
 
 
 def fill_features(record, user_data, business_data):
-    user_features = user_data.get(record[0], tuple([0] * len(params['user_feature_cols'])))
-    business_features = business_data.get(record[1], tuple([0] * len(params['business_feature_cols'])))
+    user_features = user_data.get(record[0], tuple([0] * 8))
+    business_features = business_data.get(record[1], tuple([0] * 18))
     return record + user_features + business_features
 
 
