@@ -25,6 +25,9 @@ def parse_args():
     run_time_params['train'] = 'yelp_train.csv'
     run_time_params['val'] = 'yelp_val.csv'
     run_time_params['user'] = 'user.json'
+    run_time_params['checkin'] = 'checkin.json'
+    run_time_params['photo'] = 'photo.json'
+    run_time_params['tip'] = 'tip.json'
     run_time_params['business'] = 'business.json'
     run_time_params['record_cols'] = ['user_id', 'business_id', 'rating']
     run_time_params['user_feature_cols'] = ['review_count', 'useful', 'funny', 'cool', 'fans', 'average_stars']
@@ -67,6 +70,20 @@ def parse_test_set():
         .map(lambda record: (record[0], record[1]))
 
 
+def parse_checkin_count():
+    return sc.textFile('{}/{}'.format(params['in_dir'], params['checkin'])) \
+        .map(lambda line: json.loads(line)) \
+        .map(lambda checkin_obj: (checkin_obj['business_id'], sum(checkin_obj['time'].values())))
+
+
+def parse_business_photo_count():
+    return sc.textFile('{}/{}'.format(params['in_dir'], params['photo'])) \
+        .map(lambda line: json.loads(line)) \
+        .map(lambda photo_obj: (photo_obj['business_id'], photo_obj['photo_id'])) \
+        .groupByKey() \
+        .map(lambda business_id_count: (business_id_count[0], len(business_id_count[1])))
+
+
 def parse_user_set():
     filename = '{}/{}'.format(params['in_dir'], params['user'])
 
@@ -103,7 +120,7 @@ def parse_user_set():
         .map(_user_features)
 
 
-def parse_business_set():
+def parse_business_set(business_checkin_count, business_photo_count):
     filename = '{}/{}'.format(params['in_dir'], params['business'])
 
     def _business_features(business_obj):
@@ -133,6 +150,8 @@ def parse_business_set():
                 )))
             features += (
                 business_obj['attributes'].get('RestaurantsPriceRange2', None),
+                business_checkin_count.get(business_obj['business_id'], 0),
+                business_photo_count.get(business_obj['business_id'], 0)
             )
 
         return business_obj[params['record_cols'][1]], features
@@ -152,14 +171,16 @@ def write_results_to_file(data):
 
 def fill_features(record, user_data, business_data):
     user_features = user_data.get(record[0], tuple([0] * 8))
-    business_features = business_data.get(record[1], tuple([0] * 18))
+    business_features = business_data.get(record[1], tuple([0] * 20))
     return record + user_features + business_features
 
 
 def main():
     # create feature data
     user_data = parse_user_set().collectAsMap()
-    business_data = parse_business_set().collectAsMap()
+    business_checkin_count = parse_checkin_count().collectAsMap()
+    business_photo_count = parse_business_photo_count().collectAsMap()
+    business_data = parse_business_set(business_checkin_count, business_photo_count).collectAsMap()
 
     # create training dataset
     train_df = pd.DataFrame(
@@ -169,17 +190,17 @@ def main():
         columns=params['record_cols'] + params['user_feature_cols'] + ['n_friends', 'n_compliments']
                 + params['business_feature_cols']
                 + ['n_cats', 'alcohol', 'delivery', 'kids', 'seating', 'groups', 'table_service', 'takeout',
-                   'caters', 'wheelchair', 'price_range']
+                   'caters', 'wheelchair', 'price_range', 'checkin_count', 'photo_count']
     )
-    train_df = train_df.append(pd.DataFrame(
-        parse_val_set()
-        .map(lambda record: fill_features(record, user_data, business_data))
-        .collect(),
-        columns=params['record_cols'] + params['user_feature_cols'] + ['n_friends', 'n_compliments']
-                + params['business_feature_cols']
-                + ['n_cats', 'alcohol', 'delivery', 'kids', 'seating', 'groups', 'table_service', 'takeout',
-                   'caters', 'wheelchair', 'price_range']
-    ))
+    # train_df = train_df.append(pd.DataFrame(
+    #     parse_val_set()
+    #     .map(lambda record: fill_features(record, user_data, business_data))
+    #     .collect(),
+    #     columns=params['record_cols'] + params['user_feature_cols'] + ['n_friends', 'n_compliments']
+    #             + params['business_feature_cols']
+    #             + ['n_cats', 'alcohol', 'delivery', 'kids', 'seating', 'groups', 'table_service', 'takeout',
+    #                'caters', 'wheelchair', 'price_range', 'checkin_count', 'photo_count']
+    # ))
     train_df = train_df.fillna(value=np.nan)
 
     # create test dataset
@@ -191,7 +212,7 @@ def main():
                                    + ['n_friends', 'n_compliments']
                                    + params['business_feature_cols']
                                    + ['n_cats', 'alcohol', 'delivery', 'kids', 'seating', 'groups', 'table_service',
-                                      'takeout', 'caters', 'wheelchair', 'price_range']
+                                      'takeout', 'caters', 'wheelchair', 'price_range', 'checkin_count', 'photo_count']
                            )
     test_df = test_df.fillna(value=np.nan)
 
