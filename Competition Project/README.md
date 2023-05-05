@@ -3,6 +3,21 @@
 The performance of the recommendation system from [homework 3 task 2](../homework-assignment-3) is 
 improved to get better accuracy and efficiency. Exact details are available in the [project specifications](Competition%20Project%20Description.pdf). 
 
+<!-- TOC -->
+* [Competition Project (Recommendation System)](#competition-project-recommendation-system)
+  * [Task](#task)
+      * [Warning: Spaghetti 🍝 Code in this Assignment!](#warning-spaghetti--code-in-this-assignment)
+  * [Dataset](#dataset)
+    * [File 1: ```yelp_train.csv```](#file-1-yelptraincsv)
+    * [File 2: ```yelp_val.csv```](#file-2-yelpvalcsv)
+    * [File 3: ```user.json```](#file-3-userjson)
+    * [File 4: ```business.json```](#file-4-businessjson)
+    * [File 5: ```yelp_val_in.csv```](#file-5-yelpvalincsv)
+    * [File 6: ```checkin.csv```](#file-6-checkincsv)
+    * [File 7: ```tip.csv```](#file-7-tipcsv)
+    * [File 8: ```photo.csv```](#file-8-photocsv)
+    * [File 9: ```review_train.csv```](#file-9-reviewtraincsv)
+<!-- TOC -->
 
 ## Task
 
