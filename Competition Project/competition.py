@@ -264,18 +264,18 @@ def main():
                    'touristy', 'trendy', 'upscale', 'casual',
                    'checkin_count', 'photo_count', 'tip_count', 'text_r_count']
     )
-    # train_df = train_df.append(pd.DataFrame(
-    #     parse_val_set()
-    #     .map(lambda record: fill_features(record, user_data, business_data))
-    #     .collect(),
-    #     columns=params['record_cols'] + params['user_feature_cols'] + ['n_friends', 'n_compliments', 'tip_count',
-    # 'text_r_count']
-    #             + params['business_feature_cols']
-    #             + ['n_cats', 'alcohol', 'delivery', 'kids', 'seating', 'groups', 'table_service', 'takeout',
-    #                    'caters', 'wheelchair', 'price_range', 'romantic', 'intimate', 'classy', 'hipster', 'divey',
-    #                    'touristy', 'trendy', 'upscale', 'casual',
-    #                    'checkin_count', 'photo_count', 'tip_count', 'text_r_count']
-    # ))
+    train_df = train_df.append(pd.DataFrame(
+        parse_val_set()
+        .map(lambda record: fill_features(record, user_data, business_data))
+        .collect(),
+        columns=params['record_cols'] + params['user_feature_cols'] + ['n_friends', 'n_compliments', 'tip_count',
+    'text_r_count']
+                + params['business_feature_cols']
+                + ['n_cats', 'alcohol', 'delivery', 'kids', 'seating', 'groups', 'table_service', 'takeout',
+                       'caters', 'wheelchair', 'price_range', 'romantic', 'intimate', 'classy', 'hipster', 'divey',
+                       'touristy', 'trendy', 'upscale', 'casual',
+                       'checkin_count', 'photo_count', 'tip_count', 'text_r_count']
+    ))
     train_df = train_df.fillna(value=np.nan)
 
     # create test dataset
