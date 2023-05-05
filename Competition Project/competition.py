@@ -5,17 +5,12 @@ Refine homework 3 task 2 to get RMSE below 0.98
 
 Model used: XGBRegressor
 
-
 Improving the efficiency:
-[Final runtime results]:
-
 To make the model train faster, optuna (https://optuna.org/) a hyper-parameter tuning framework was used to get the
 best possible runtime without sacrificing the RMSE. The number of estimators [n_estimators] was reduced to 130 by tuning
-the other hyper-parameters to maintain the required RMSE.
+the other hyper-parameter to maintain the required RMSE.
 
 Improving the RMSE:
-[Final RMSE results]:
-
 To get the RMSE below 0.98 many additional features were used for the training of the model.
 Feature engineering and fine-tuning were the biggest boost to the accuracy of the model.
 A summary of the features is given below:
@@ -73,6 +68,20 @@ Business side features (31 features):
 - tip count (tips left for the business)
 [from review_train.json]:
 - text review count (text reviews left for the business)
+
+Error Distribution:
+'<1': 102203
+'<2': 32892
+'<3': 6157
+'<4': 792
+'<5': 0
+
+RMSE:
+0.9782315085255275
+
+Execution Time:
+178.080277s (without GPU)
+55.549092s (with GPU)
 """
 import json
 import pandas as pd
@@ -99,7 +108,7 @@ def parse_args():
     run_time_params['test_file'] = sys.argv[2]
     run_time_params['out_file'] = sys.argv[3]
     run_time_params['train'] = 'yelp_train.csv'
-    run_time_params['val'] = 'yelp_val.csv'
+    run_time_params['val'] = 'yelp_val__.csv'
     run_time_params['user'] = 'user.json'
     run_time_params['checkin'] = 'checkin.json'
     run_time_params['photo'] = 'photo.json'
