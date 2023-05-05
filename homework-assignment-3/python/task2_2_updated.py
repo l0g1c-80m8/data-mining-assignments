@@ -28,6 +28,7 @@ def parse_args():
     run_time_params['checkin'] = 'checkin.json'
     run_time_params['photo'] = 'photo.json'
     run_time_params['tip'] = 'tip.json'
+    run_time_params['review'] = 'review_train.json'
     run_time_params['business'] = 'business.json'
     run_time_params['record_cols'] = ['user_id', 'business_id', 'rating']
     run_time_params['user_feature_cols'] = ['review_count', 'useful', 'funny', 'cool', 'fans', 'average_stars']
@@ -97,10 +98,26 @@ def parse_user_tip_count():
         .map(lambda line: json.loads(line)) \
         .map(lambda tip_obj: (tip_obj['user_id'], tip_obj['business_id'])) \
         .groupByKey() \
+        .map(lambda user_id_count: (user_id_count[0], len(user_id_count[1])))
+
+
+def parse_business_text_review_count():
+    return sc.textFile('{}/{}'.format(params['in_dir'], params['review'])) \
+        .map(lambda line: json.loads(line)) \
+        .map(lambda review_obj: (review_obj['business_id'], review_obj['review_id'])) \
+        .groupByKey() \
         .map(lambda business_id_count: (business_id_count[0], len(business_id_count[1])))
 
 
-def parse_user_set(user_tip_count):
+def parse_user_text_review_count():
+    return sc.textFile('{}/{}'.format(params['in_dir'], params['review'])) \
+        .map(lambda line: json.loads(line)) \
+        .map(lambda review_obj: (review_obj['user_id'], review_obj['review_id'])) \
+        .groupByKey() \
+        .map(lambda user_id_count: (user_id_count[0], len(user_id_count[1])))
+
+
+def parse_user_set(user_tip_count, user_text_review_count):
     filename = '{}/{}'.format(params['in_dir'], params['user'])
 
     def _user_features(user_obj):
@@ -128,7 +145,10 @@ def parse_user_set(user_tip_count):
                 user_obj.get('compliment_photos', 0),
             ]
         )),)
-        features += (user_tip_count.get(user_obj['user_id'], 0), )
+        features += (
+            user_tip_count.get(user_obj['user_id'], 0),
+            user_text_review_count.get(user_obj['user_id'], 0)
+        )
 
         return user_obj[params['record_cols'][0]], features
 
@@ -137,7 +157,7 @@ def parse_user_set(user_tip_count):
         .map(_user_features)
 
 
-def parse_business_set(business_checkin_count, business_photo_count, business_tip_count):
+def parse_business_set(business_checkin_count, business_photo_count, business_tip_count, business_text_review_count):
     filename = '{}/{}'.format(params['in_dir'], params['business'])
 
     def _business_features(business_obj):
@@ -169,7 +189,8 @@ def parse_business_set(business_checkin_count, business_photo_count, business_ti
                 business_obj['attributes'].get('RestaurantsPriceRange2', None),
                 business_checkin_count.get(business_obj['business_id'], 0),
                 business_photo_count.get(business_obj['business_id'], 0),
-                business_tip_count.get(business_obj['business_id'], 0)
+                business_tip_count.get(business_obj['business_id'], 0),
+                business_text_review_count.get(business_obj['business_id'], 0)
             )
 
         return business_obj[params['record_cols'][1]], features
@@ -188,38 +209,47 @@ def write_results_to_file(data):
 
 
 def fill_features(record, user_data, business_data):
-    user_features = user_data.get(record[0], tuple([0] * 9))
-    business_features = business_data.get(record[1], tuple([0] * 21))
+    user_features = user_data.get(record[0], tuple([0] * 10))
+    business_features = business_data.get(record[1], tuple([0] * 22))
     return record + user_features + business_features
 
 
 def main():
     # create feature data
     user_tip_count = parse_user_tip_count().collectAsMap()
-    user_data = parse_user_set(user_tip_count).collectAsMap()
+    user_text_review_count = parse_user_text_review_count().collectAsMap()
+    user_data = parse_user_set(user_tip_count, user_text_review_count).collectAsMap()
     business_checkin_count = parse_checkin_count().collectAsMap()
     business_photo_count = parse_business_photo_count().collectAsMap()
     business_tip_count = parse_business_tip_count().collectAsMap()
-    business_data = parse_business_set(business_checkin_count, business_photo_count, business_tip_count).collectAsMap()
+    business_text_review_count = parse_business_text_review_count().collectAsMap()
+    business_data = parse_business_set(
+        business_checkin_count,
+        business_photo_count,
+        business_tip_count,
+        business_text_review_count
+    ).collectAsMap()
 
     # create training dataset
     train_df = pd.DataFrame(
         parse_train_set()
         .map(lambda record: fill_features(record, user_data, business_data))
         .collect(),
-        columns=params['record_cols'] + params['user_feature_cols'] + ['n_friends', 'n_compliments', 'tip_count']
+        columns=params['record_cols'] + params['user_feature_cols'] + ['n_friends', 'n_compliments', 'tip_count',
+                                                                       'text_r_count']
                 + params['business_feature_cols']
                 + ['n_cats', 'alcohol', 'delivery', 'kids', 'seating', 'groups', 'table_service', 'takeout',
-                   'caters', 'wheelchair', 'price_range', 'checkin_count', 'photo_count', 'tip_count']
+                   'caters', 'wheelchair', 'price_range', 'checkin_count', 'photo_count', 'tip_count', 'text_r_count']
     )
     # train_df = train_df.append(pd.DataFrame(
     #     parse_val_set()
     #     .map(lambda record: fill_features(record, user_data, business_data))
     #     .collect(),
-    #     columns=params['record_cols'] + params['user_feature_cols'] + ['n_friends', 'n_compliments', 'tip_count']
+    #     columns=params['record_cols'] + params['user_feature_cols'] + ['n_friends', 'n_compliments', 'tip_count',
+                                                                       # 'text_r_count']
     #             + params['business_feature_cols']
     #             + ['n_cats', 'alcohol', 'delivery', 'kids', 'seating', 'groups', 'table_service', 'takeout',
-    #                'caters', 'wheelchair', 'price_range', 'checkin_count', 'photo_count', 'tip_count']
+    #                'caters', 'wheelchair', 'price_range', 'checkin_count', 'photo_count', 'tip_count', 'text_r_count']
     # ))
     train_df = train_df.fillna(value=np.nan)
 
@@ -229,11 +259,11 @@ def main():
         .collect()
     test_df = pd.DataFrame(test_set,
                            columns=params['record_cols'][: -1] + params['user_feature_cols']
-                                   + ['n_friends', 'n_compliments', 'tip_count']
+                                   + ['n_friends', 'n_compliments', 'tip_count', 'text_r_count']
                                    + params['business_feature_cols']
                                    + ['n_cats', 'alcohol', 'delivery', 'kids', 'seating', 'groups', 'table_service',
                                       'takeout', 'caters', 'wheelchair', 'price_range', 'checkin_count', 'photo_count',
-                                      'tip_count']
+                                      'tip_count', 'text_r_count']
                            )
     test_df = test_df.fillna(value=np.nan)
 
